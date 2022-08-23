@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BleLibraryForKotlin</string>
+    <string name="no_permission_dialog_title">没有权限</string>
+    <string name="no_permission_dialog_msg">没有权限，请前往设置界面开启权限\n %1$s</string>
+    <string name="sdcard_permisson">存储读写权限</string>
+    <string name="go_settings">去设置</string>
+    <string name="cancel">取消</string>
+</resources>
