@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--  扫描物理层  -->
+    <string name="phy_le_all_supported">全部物理层</string>
+    <string name="phy_le_1m">LE 1M</string>
+    <string name="phy_le_coded">LE CODED</string>
+</resources>

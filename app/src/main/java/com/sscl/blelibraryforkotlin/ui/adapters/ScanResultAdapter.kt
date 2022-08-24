@@ -1,5 +1,6 @@
 package com.sscl.blelibraryforkotlin.ui.adapters
 
+import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
 import android.view.View
 import com.chad.library.adapter.base.BaseQuickAdapter
@@ -27,16 +28,23 @@ class ScanResultAdapter :
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-    /**
-     * Implement this method and use the helper to adapt the view to the given item.
-     *
-     * 实现此方法，并使用 helper 完成 item 视图的操作
-     *
-     * @param holder A fully initialized helper.
-     * @param item   The item that needs to be displayed.
-     */
     override fun convert(holder: ViewHolder, item: ScanResult) {
         holder.dataBinding?.item = item
+    }
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 公开方法
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * 清除列表数据
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    fun clear() {
+        data.clear()
+        notifyDataSetChanged()
     }
 
 }

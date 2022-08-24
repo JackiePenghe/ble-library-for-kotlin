@@ -11,4 +11,10 @@
     <string-array name="ble_callback_type" tools:ignore="InconsistentArrays">
         <item>@string/callback_type_all_matches</item>
     </string-array>
+
+    <!--  名称过滤选项  -->
+    <string-array name="name_filter_items">
+        <item>@string/starts_name</item>
+        <item>@string/full_name</item>
+    </string-array>
 </resources>

@@ -10,7 +10,7 @@ import androidx.annotation.RequiresApi
  * @author jackie
  */
 @RequiresApi(Build.VERSION_CODES.O)
-enum class ScanPhy(val value: Int) {
+enum class BleScanPhy(val value: Int) {
     /**
      * 全部
      */

@@ -12,4 +12,13 @@
     <item
         android:id="@+id/set_ble_report_delay"
         android:title="@string/menu_set_ble_report_delay" />
+    <item
+        android:id="@+id/set_ble_scan_phy"
+        android:title="@string/menu_set_ble_scan_phy" />
+    <item
+        android:id="@+id/set_ble_scan_timeout"
+        android:title="@string/menu_set_ble_scan_period" />
+    <item
+        android:id="@+id/name_filter"
+        android:title="@string/menu_name_filter" />
 </menu>

@@ -20,20 +20,47 @@
     <string name="menu_set_ble_callback_type">设置回调类型</string>
     <string name="ble_callback_type_not_support_with_low_system_version">回调类型需要安卓6.0系统支持</string>
     <string name="set_ble_callback_type_dialog_title">设置回调类型</string>
+    <string name="ble_scan_phy_not_support_with_low_system_version">设置扫描物理层需要安卓8.0</string>
+    <string name="set_ble_scan_phy_dialog_title">设置扫描物理层</string>
+    <string name="menu_set_ble_report_delay">扫描结果反馈延时时间</string>
+    <string name="set_ble_report_delay_dialog_title">设置扫描反馈延时时间</string>
+    <string name="scan_report_delay_colon">扫描反馈延时时间(ms)：</string>
+    <string name="please_type_scan_report_delay">请输入扫描反馈延时，单位：ms</string>
+    <string name="confirm">确认</string>
+    <string name="menu_set_ble_scan_phy">设置扫描物理层</string>
+    <string name="menu_set_ble_scan_period">设置扫描时长</string>
+    <string name="scan_timeout_colon">扫描时长(ms)：</string>
+    <string name="please_type_scan_timeout">请输入扫描时长</string>
+    <string name="set_ble_scan_timeout_dialog_title">设置扫描时长</string>
+    <string name="data_invalid">数据无效</string>
+    <string name="data_empty">空数据</string>
+    <string name="scan_timeout_hint">输入负数可一直扫描，直到手动停止</string>
+    <string name="menu_name_filter">名称过滤</string>
+    <string name="name_filter_dialog_title">名称过滤</string>
 
     <!--  扫描模式  -->
     <string name="ble_mode_balanced">平衡模式</string>
     <string name="ble_mode_low_latency">低延时模式</string>
     <string name="ble_mode_low_power">低功耗模式</string>
 
-    <!--  匹配模式-无参数  -->
-
     <!--  回调类型  -->
     <string name="callback_type_all_matches">全部匹配</string>
-    <string name="menu_set_ble_report_delay">扫描结果反馈延时时间</string>
-    <string name="set_ble_report_delay_dialog_title">设置扫描反馈延时时间</string>
-    <string name="scan_report_delay_colon">扫描反馈延时时间(ms)：</string>
-    <string name="please_type_scan_report_delay">请输入扫描反馈延时，单位：ms</string>
-    <string name="confirm">确认</string>
 
+    <!--  名称过滤选项  -->
+    <string name="starts_name">匹配开头</string>
+    <string name="full_name">匹配全名</string>
+    <string name="set_starts_name_filter">设置名称过滤-开头匹配</string>
+    <string name="added_filter">已添加的过滤条件</string>
+    <string name="add_new_filter">添加过滤</string>
+    <string name="clear_filter">清空过滤</string>
+    <string name="filter_starts_name_colon">开头名称：</string>
+    <string name="please_type_filter_start_name">请输入设备名称开头</string>
+    <string name="cleared">已清空</string>
+    <string name="added">已添加</string>
+    <string name="set_full_name_filter">设置名称过滤-完全匹配</string>
+    <string name="filter_full_name_colon">设备全名：</string>
+    <string name="please_type_filter_full_name">请输入设备全名</string>
+    <string name="delete_filter_dialog_title">删除过滤条件</string>
+    <string name="delete_filter_dialog_msg">将会删除过滤条件 -&gt;%1$s&lt;-，是否确认？</string>
+    <string name="deleted">已删除</string>
 </resources>

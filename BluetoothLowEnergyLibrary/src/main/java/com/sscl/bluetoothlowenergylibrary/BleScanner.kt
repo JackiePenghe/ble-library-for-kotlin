@@ -175,17 +175,12 @@ class BleScanner {
      * 扫描物理层-仅当legacy为false时有效
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private var scanPhy = ScanPhy.PHY_LE_ALL_SUPPORTED
+    private var bleScanPhy = BleScanPhy.PHY_LE_ALL_SUPPORTED
 
     /**
      * 单次扫描的最大时长，为负数表示一直扫描，直到手动停止扫描
      */
-    private var scanPeriod: Long = 20000
-
-    /**
-     * 单次扫描的最大时长单位，默认值：毫秒
-     */
-    private var scanPeriodTimeUnit = TimeUnit.MILLISECONDS
+    private var scanTimeout: Long = 20000
 
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
@@ -290,26 +285,17 @@ class BleScanner {
      * 设置扫描物理层
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    fun setScanPhy(scanPhy: ScanPhy) {
-        this.scanPhy = scanPhy
+    fun setScanPhy(bleScanPhy: BleScanPhy) {
+        this.bleScanPhy = bleScanPhy
     }
 
     /**
-     * 设置单次扫描周期
+     * 设置单次扫描最大时长（小于0表示一直扫描）
      *
-     * @param scanPeriod 扫描周期
+     * @param scanTimeout 单次扫描最大时长
      */
-    fun setScanPeriod(scanPeriod: Long) {
-        this.scanPeriod = scanPeriod
-    }
-
-    /**
-     * 设置扫描周期
-     *
-     * @param scanPeriodTimeUnit 扫描时长
-     */
-    fun setScanPeriodTimeUnit(scanPeriodTimeUnit: TimeUnit) {
-        this.scanPeriodTimeUnit = scanPeriodTimeUnit
+    fun setScanTimeout(scanTimeout: Long) {
+        this.scanTimeout = scanTimeout
     }
 
     /**
@@ -347,7 +333,7 @@ class BleScanner {
     /**
      * 获取过滤名称的列表
      */
-    fun getFilterNames(): ArrayList<String> {
+    fun getFilterStartsNames(): ArrayList<String> {
         //返回一个新创建的对象，防止外部使用获取到的引用更改列表中的内容导致过滤条件出现异常
         return ArrayList(filterNames)
     }
@@ -724,7 +710,7 @@ class BleScanner {
             Logger.log(TAG, "安卓版本支持手动设置legacy与phy,使用对应的变量值")
             builder.setLegacy(legacy)
             if (BleManager.bluetoothAdapter?.isLeCodedPhySupported == true) {
-                builder.setPhy(scanPhy.value)
+                builder.setPhy(bleScanPhy.value)
             }
         }
         return builder.build()
@@ -735,11 +721,11 @@ class BleScanner {
      */
     private fun startScanTimer() {
         stopScanTimer()
-        if (scanPeriod < 0) {
+        if (scanTimeout < 0) {
             return
         }
         scanTimer = ScheduledThreadPoolExecutor(1, BleManager.threadFactory)
-        scanTimer?.schedule(scanTimerRunnable, scanPeriod, scanPeriodTimeUnit)
+        scanTimer?.schedule(scanTimerRunnable, scanTimeout, TimeUnit.MILLISECONDS)
     }
 
     /**

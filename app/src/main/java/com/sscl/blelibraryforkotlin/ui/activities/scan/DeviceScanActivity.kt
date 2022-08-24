@@ -16,6 +16,8 @@ import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
 import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
+import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullNameFilterDialog
+import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartNameFilterDialog
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
 import com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel
@@ -24,6 +26,7 @@ import com.sscl.bluetoothlowenergylibrary.BleScanner
 import com.sscl.bluetoothlowenergylibrary.enums.BleCallbackType
 import com.sscl.bluetoothlowenergylibrary.enums.BleMatchMode
 import com.sscl.bluetoothlowenergylibrary.enums.BleScanMode
+import com.sscl.bluetoothlowenergylibrary.enums.BleScanPhy
 import com.sscl.bluetoothlowenergylibrary.getFailMsg
 import com.sscl.bluetoothlowenergylibrary.indexOfScanResults
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
@@ -231,6 +234,15 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             R.id.set_ble_report_delay -> {
                 showSetBleReportDelayDialog()
             }
+            R.id.set_ble_scan_phy -> {
+                showSelectBleScanPhyDialog()
+            }
+            R.id.set_ble_scan_timeout -> {
+                showSetBleScanTimeoutDialog()
+            }
+            R.id.name_filter -> {
+                showNameFilterOptionsDialog()
+            }
             else -> {
                 return false
             }
@@ -269,6 +281,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             }
             deviceScanActivityViewModel.searchBtnText.value = getString(R.string.start_scan)
         } else {
+            scanResultAdapter.clear()
             val succeed = bleScanner.startScan(true)
             if (!succeed) {
                 toastL(R.string.start_scan_failed)
@@ -349,22 +362,108 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             .setTitle(R.string.set_ble_report_delay_dialog_title)
             .setView(view)
             .setPositiveButton(R.string.confirm) { _, _ ->
-                var text =
+                val text =
                     view.findViewById<EditText>(R.id.scan_report_delay_et).text.toString().trim()
                 if (text.isEmpty()) {
-                    text = "0"
+                    toastL(R.string.data_empty)
+                    return@setPositiveButton
                 }
                 val result = try {
                     text.toLong()
                 } catch (e: Exception) {
-                    0
+                    toastL(R.string.data_invalid)
+                    return@setPositiveButton
                 }
                 warnOut("setReportDelay $result")
                 bleScanner.setReportDelay(result)
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
 
+    /**
+     * 显示设置扫描时长的对话框
+     */
+    private fun showSetBleScanTimeoutDialog() {
+        val view = View.inflate(this, R.layout.view_ble_scan_timeout, null)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.set_ble_scan_timeout_dialog_title)
+            .setView(view)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                val text = view.findViewById<EditText>(R.id.scan_timeout_et).text.toString().trim()
+                if (text.isEmpty()) {
+                    toastL(R.string.data_empty)
+                    return@setPositiveButton
+                }
+                val result = try {
+                    text.toLong()
+                } catch (e: Exception) {
+                    toastL(R.string.data_invalid)
+                    return@setPositiveButton
+                }
+                warnOut("setScanTimeout $result")
+                bleScanner.setScanTimeout(result)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示设置扫描物理层的对话框
+     */
+    private fun showSelectBleScanPhyDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            toastL(R.string.ble_scan_phy_not_support_with_low_system_version)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.set_ble_scan_phy_dialog_title)
+            .setItems(R.array.ble_scan_phy) { _, which ->
+                val bleScanPhy = BleScanPhy.values()[which]
+                bleScanner.setScanPhy(bleScanPhy)
+                warnOut("bleScanPhy $bleScanPhy")
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示名称过滤选项对话框
+     */
+    private fun showNameFilterOptionsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.name_filter_dialog_title)
+            .setItems(R.array.name_filter_items) { _, which ->
+                when (which) {
+                    //匹配开头
+                    0 -> {
+                        showSetStartNameFilterNameDialog()
+                    }
+                    //匹配全名
+                    1 -> {
+                        showSetFullNameFilterDialog()
+                    }
+                    else -> {
+                        warnOut("未处理的名称过滤条件")
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示 设置开头名称过滤条件 的对话框
+     */
+    private fun showSetStartNameFilterNameDialog() {
+        SetStartNameFilterDialog(this, bleScanner).show()
+    }
+
+    /**
+     * 显示 设置完全匹配名称过滤条件 的对话框
+     */
+    private fun showSetFullNameFilterDialog() {
+        SetFullNameFilterDialog(this, bleScanner).show()
     }
 
     /**
