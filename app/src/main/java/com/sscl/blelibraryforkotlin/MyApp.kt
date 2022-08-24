@@ -3,6 +3,7 @@ package com.sscl.blelibraryforkotlin
 import android.app.Application
 import com.sscl.baselibrary.files.FileUtil
 import com.sscl.baselibrary.utils.CrashHandler
+import com.sscl.baselibrary.utils.DebugUtil
 import com.sscl.baselibrary.utils.LogCatHelper
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.Logger
@@ -31,6 +32,7 @@ class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        DebugUtil.setDebugFlag(true)
         FileUtil.init(this)
         BleManager.initialize(this)
         Logger.enableLog(true)

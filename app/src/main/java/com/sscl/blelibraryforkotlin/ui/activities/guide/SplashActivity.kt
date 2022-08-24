@@ -1,14 +1,16 @@
-package com.sscl.blelibraryforkotlin.ui
+package com.sscl.blelibraryforkotlin.ui.activities.guide
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AlertDialog
 import com.sscl.baselibrary.activity.BaseSplashActivity
 import com.sscl.baselibrary.utils.BaseManager
 import com.sscl.baselibrary.utils.PermissionUtil
 import com.sscl.blelibraryforkotlin.MyApp
 import com.sscl.blelibraryforkotlin.R
+import com.sscl.blelibraryforkotlin.ui.activities.MainActivity
 
 /**
  * 启动界面
@@ -26,10 +28,27 @@ class SplashActivity : BaseSplashActivity() {
         /**
          * 权限
          */
-        private val PERMISSIONS = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
+        private val PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            )
+        }
+
 
         /**
          * 权限请求码
@@ -111,7 +130,7 @@ class SplashActivity : BaseSplashActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (needCheckPermission){
+        if (needCheckPermission) {
             needCheckPermission = false
             checkPermissions()
         }
@@ -169,7 +188,7 @@ class SplashActivity : BaseSplashActivity() {
             .setMessage(
                 getString(
                     R.string.no_permission_dialog_msg,
-                    getString(R.string.sdcard_permisson)
+                    getString(R.string.sdcard_permission)
                 )
             )
             .setCancelable(false)
@@ -177,7 +196,7 @@ class SplashActivity : BaseSplashActivity() {
                 PermissionUtil.toSettingActivity(this@SplashActivity)
                 BaseManager.handler.postDelayed({
                     needCheckPermission = true
-                },500)
+                }, 500)
             }
             .setNegativeButton(R.string.cancel) { _, _ ->
                 finish()

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--  扫描模式  -->
+    <string name="ble_mode_balanced">平衡模式</string>
+    <string name="ble_mode_low_latency">低延时模式</string>
+    <string name="ble_mode_low_power">低功耗模式</string>
+    <string name="ble_mode_opportunistic">投机模式</string>
+
+    <!--  匹配模式  -->
+    <string name="ble_match_mode_sticky">粘性模式</string>
+    <string name="ble_match_mode_aggressive">进击模式</string>
+
+    <!--  回调类型  -->
+    <string name="callback_type_all_matches">全部匹配</string>
+    <string name="callback_type_first_match">首次匹配</string>
+    <string name="callback_type_match_lost">丢失模式</string>
+</resources>

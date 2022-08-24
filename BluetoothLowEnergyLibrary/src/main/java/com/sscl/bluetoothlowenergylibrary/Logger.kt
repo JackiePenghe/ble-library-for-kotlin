@@ -84,7 +84,7 @@ object Logger {
     /**
      * 日志输出
      */
-    fun log(tag: String, msg: String) {
+    internal fun log(tag: String, msg: String) {
         if (!logEnable) {
             return
         }
@@ -106,5 +106,4 @@ object Logger {
             }
         }
     }
-
 }

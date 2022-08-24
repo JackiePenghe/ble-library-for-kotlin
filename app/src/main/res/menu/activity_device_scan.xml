@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/set_ble_scan_mode"
+        android:title="@string/menu_set_ble_scan_mode" />
+    <item
+        android:id="@+id/set_ble_match_mode"
+        android:title="@string/menu_set_ble_match_mode" />
+    <item
+        android:id="@+id/set_ble_callback_type"
+        android:title="@string/menu_set_ble_callback_type" />
+    <item
+        android:id="@+id/set_ble_report_delay"
+        android:title="@string/menu_set_ble_report_delay" />
+</menu>

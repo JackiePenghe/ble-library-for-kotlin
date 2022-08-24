@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--  扫描模式-6.0  -->
+    <string-array name="ble_mode" tools:ignore="InconsistentArrays">
+        <item>@string/ble_mode_balanced</item>
+        <item>@string/ble_mode_low_latency</item>
+        <item>@string/ble_mode_low_power</item>
+        <item>@string/ble_mode_opportunistic</item>
+    </string-array>
+
+    <!--  匹配模式  -->
+    <string-array name="ble_match_mode" tools:ignore="InconsistentArrays">
+        <item>@string/ble_match_mode_sticky</item>
+        <item>@string/ble_match_mode_aggressive</item>
+    </string-array>
+
+    <!--  回调类型  -->
+    <string-array name="ble_callback_type" tools:ignore="InconsistentArrays">
+        <item>@string/callback_type_all_matches</item>
+        <item>@string/callback_type_first_match</item>
+        <item>@string/callback_type_match_lost</item>
+    </string-array>
+</resources>

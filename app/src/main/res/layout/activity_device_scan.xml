@@ -5,19 +5,26 @@
     <data>
         <variable
             name="viewModel"
-            type="com.sscl.blelibraryforkotlin.viewmodels.MainActivityViewModel" />
+            type="com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel" />
     </data>
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.activities.MainActivity">
+        tools:context=".ui.activities.scan.DeviceScanActivity">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/device_list_rv"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
 
         <Button
-            android:id="@+id/connect_single_device_btn"
-            android:text="@string/connect_single_device"
+            android:text="@={viewModel.searchBtnText}"
+            android:id="@+id/search_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+
     </LinearLayout>
 </layout>

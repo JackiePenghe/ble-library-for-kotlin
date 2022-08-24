@@ -1,13 +1,13 @@
-package com.sscl.blelibraryforkotlin.ui
+package com.sscl.blelibraryforkotlin.ui.activities
 
+import android.view.View
 import androidx.activity.viewModels
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityMainBinding
+import com.sscl.blelibraryforkotlin.ui.activities.scan.DeviceScanActivity
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
+import com.sscl.blelibraryforkotlin.utils.startActivity
 import com.sscl.blelibraryforkotlin.viewmodels.MainActivityViewModel
-import com.sscl.bluetoothlowenergylibrary.BleManager
-import com.sscl.bluetoothlowenergylibrary.BleScanner
-import com.sscl.bluetoothlowenergylibrary.enums.BleScanMode
 
 class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
 
@@ -22,7 +22,7 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
-     * 属性方法
+     * 属性声明
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -35,16 +35,16 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
         MainActivityViewModel.MainActivityViewModelFactory
     }
 
-    /* * * * * * * * * * * * * * * * * * * 延时初始化属性 * * * * * * * * * * * * * * * * * * */
-
     /**
-     * 蓝牙扫描单例
+     * 点击事件的处理
      */
-    private lateinit var bleScanner: BleScanner
-
-    /* * * * * * * * * * * * * * * * * * * 可变属性 * * * * * * * * * * * * * * * * * * */
-
-
+    private val onClickListener = View.OnClickListener {
+        when (it.id) {
+            binding.connectSingleDeviceBtn.id -> {
+                toDeviceScanActivity()
+            }
+        }
+    }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -56,13 +56,14 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      * 在设置布局之前需要进行的操作
      */
     override fun doBeforeSetLayout() {
-        initBleScanner()
+
     }
 
     /**
      * 在设置布局之后，进行其他操作之前，所需要初始化的数据
      */
     override fun doBeforeInitOthers() {
+        hideTitleBackButton()
         binding.viewModel = mainActivityViewModel
     }
 
@@ -84,7 +85,7 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      * 初始化事件
      */
     override fun initEvents() {
-
+        binding.connectSingleDeviceBtn.setOnClickListener(onClickListener)
     }
 
     /**
@@ -101,9 +102,9 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
     /**
-     * 初始化蓝牙扫描器
+     * 跳转到设备扫描界面
      */
-    private fun initBleScanner() {
-        bleScanner = BleManager.newBleScanner()
+    private fun toDeviceScanActivity() {
+        startActivity(DeviceScanActivity::class.java)
     }
 }

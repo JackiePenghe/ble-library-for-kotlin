@@ -21,15 +21,4 @@ class MainActivityViewModel : ViewModel() {
             return MainActivityViewModel() as T
         }
     }
-
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *
-     * 属性声明
-     *
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 按钮文本
-     */
-    val searchBtnText = MutableLiveData<String>()
 }

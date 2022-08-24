@@ -2,7 +2,38 @@
     <string name="app_name">BleLibraryForKotlin</string>
     <string name="no_permission_dialog_title">没有权限</string>
     <string name="no_permission_dialog_msg">没有权限，请前往设置界面开启权限\n %1$s</string>
-    <string name="sdcard_permisson">存储读写权限</string>
+    <string name="sdcard_permission">存储读写权限</string>
     <string name="go_settings">去设置</string>
     <string name="cancel">取消</string>
+    <string name="start_scan">开始扫描</string>
+    <string name="stop_scan">停止扫描</string>
+    <string name="start_scan_failed">扫描失败</string>
+    <string name="stop_scan_failed">停止失败</string>
+    <string name="connect_single_device">连接单个设备</string>
+    <string name="device_scan_title">设备扫描</string>
+    <string name="NA">N/A</string>
+    <string name="menu_set_ble_scan_mode">设置扫描模式</string>
+    <string name="set_ble_scan_mode_dialog_title">设置扫描模式</string>
+    <string name="ble_match_mode_not_support_with_low_system_version">匹配模式需要安卓6.0系统支持</string>
+    <string name="menu_set_ble_match_mode">设置匹配模式</string>
+    <string name="set_ble_match_mode_dialog_title">设置匹配模式</string>
+    <string name="menu_set_ble_callback_type">设置回调类型</string>
+    <string name="ble_callback_type_not_support_with_low_system_version">回调类型需要安卓6.0系统支持</string>
+    <string name="set_ble_callback_type_dialog_title">设置回调类型</string>
+
+    <!--  扫描模式  -->
+    <string name="ble_mode_balanced">平衡模式</string>
+    <string name="ble_mode_low_latency">低延时模式</string>
+    <string name="ble_mode_low_power">低功耗模式</string>
+
+    <!--  匹配模式-无参数  -->
+
+    <!--  回调类型  -->
+    <string name="callback_type_all_matches">全部匹配</string>
+    <string name="menu_set_ble_report_delay">扫描结果反馈延时时间</string>
+    <string name="set_ble_report_delay_dialog_title">设置扫描反馈延时时间</string>
+    <string name="scan_report_delay_colon">扫描反馈延时时间(ms)：</string>
+    <string name="please_type_scan_report_delay">请输入扫描反馈延时，单位：ms</string>
+    <string name="confirm">确认</string>
+
 </resources>

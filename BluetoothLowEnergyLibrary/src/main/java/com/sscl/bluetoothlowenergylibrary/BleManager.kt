@@ -1,11 +1,15 @@
 package com.sscl.bluetoothlowenergylibrary
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import com.sscl.bluetoothlowenergylibrary.exceptions.BluetoothLENotSupportException
 import java.util.concurrent.ThreadFactory
 
 /**
@@ -61,6 +65,11 @@ object BleManager {
      */
     private var bluetoothStateReceiverRegistered = false
 
+    /**
+     * 记录设备初始化状态
+     */
+    private var initialized = false
+
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -89,13 +98,41 @@ object BleManager {
     /**
      * 初始化
      */
+    @Synchronized
     fun initialize(context: Context) {
+        if (initialized) {
+            Logger.log(TAG, "已经初始化，拦截重复初始化操作")
+            return
+        }
         BleManager.context = context.applicationContext
         registerBluetoothStateReceiver()
         bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         Logger.log(TAG, "bluetoothManager = $bluetoothManager")
         bluetoothAdapter = bluetoothManager?.adapter
         Logger.log(TAG, "bluetoothAdapter = $bluetoothAdapter")
+        initialized = true
+    }
+
+    /**
+     * 请求开启蓝牙开关
+     *
+     * @return true means request success
+     */
+    @SuppressLint("MissingPermission")
+    fun enableBluetooth(enable: Boolean): Boolean {
+        checkInitialState()
+        if (!supportBluetooth()) {
+            return false
+        }
+        val adapter = bluetoothAdapter ?: return false
+        if (!hasBluetoothConnectPermission()){
+            return false
+        }
+        return if (enable) {
+            adapter.enable()
+        } else {
+            adapter.disable()
+        }
     }
 
     /**
@@ -103,6 +140,7 @@ object BleManager {
      */
     @Synchronized
     fun getBleScannerInstance(): BleScanner {
+        checkInitialState()
         if (bleScannerInstance == null) {
             bleScannerInstance = BleScanner()
         }
@@ -114,14 +152,44 @@ object BleManager {
      */
     @Synchronized
     fun newBleScanner(): BleScanner {
+        checkInitialState()
         val bleScanner = BleScanner()
         bleScanners.add(bleScanner)
         return bleScanner
     }
 
+    /**
+     * 判断设备是否支持蓝牙功能
+     */
+    fun supportBluetooth(): Boolean {
+        checkInitialState()
+        return bluetoothManager != null
+    }
+
+    /**
+     * 判断设备是否支持蓝牙功能
+     */
+    fun supportBluetoothLe(): Boolean {
+        checkInitialState()
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    }
+
+    /**
+     * 释放BLE扫描器的内存
+     */
     fun releaseBleScanner(bleScanner: BleScanner): Boolean {
+        checkInitialState()
         bleScanner.close()
         return bleScanners.remove(bleScanner)
+    }
+
+    /**
+     * 释放BLE扫描器单例的内存
+     */
+    fun releaseBleScannerInstance() {
+        checkInitialState()
+        bleScannerInstance?.close()
+        bleScannerInstance = null
     }
 
     /* * * * * * * * * * * * * * * * * * * 私有方法 * * * * * * * * * * * * * * * * * * */
@@ -136,5 +204,14 @@ object BleManager {
         }
         context.registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter)
         bluetoothStateReceiverRegistered = true
+    }
+
+    /**
+     * 检查初始化状态
+     */
+    private fun checkInitialState() {
+        if (!initialized) {
+            throw IllegalStateException("未初始化，请先初始化")
+        }
     }
 }

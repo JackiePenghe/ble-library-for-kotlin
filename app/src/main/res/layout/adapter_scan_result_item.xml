@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="item"
+            type="android.bluetooth.le.ScanResult" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="?attr/listPreferredItemHeight">
+
+            <TextView
+                android:text="@{item.device.name}"
+                android:id="@android:id/text1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAppearance="?attr/textAppearanceListItem" />
+
+            <TextView
+                android:text="@{item.device.address}"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@android:id/text1"
+                android:layout_alignStart="@android:id/text1"
+                android:textAppearance="?attr/textAppearanceListItemSecondary" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/advertising_interval"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="20dp"
+            android:gravity="center_vertical"
+            android:text="@{(android.os.Build.VERSION.SDK_INT >android.os.Build.VERSION_CODES.O) ? ``+item.periodicAdvertisingInterval : @string/NA}" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="15dp"
+            android:gravity="center_vertical"
+            android:text="@{``+item.rssi}"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
+</layout>

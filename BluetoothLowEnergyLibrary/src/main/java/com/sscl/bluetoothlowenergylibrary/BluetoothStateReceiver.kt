@@ -25,7 +25,7 @@ internal class BluetoothStateReceiver : BroadcastReceiver() {
         /**
          * 广播过滤器
          */
-        val intentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        internal val intentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
          *

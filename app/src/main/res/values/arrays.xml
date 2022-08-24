@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--  扫描模式  -->
+    <string-array name="ble_mode" tools:ignore="InconsistentArrays">
+        <item>@string/ble_mode_balanced</item>
+        <item>@string/ble_mode_low_latency</item>
+        <item>@string/ble_mode_low_power</item>
+    </string-array>
+
+    <!--  回调类型  -->
+    <string-array name="ble_callback_type" tools:ignore="InconsistentArrays">
+        <item>@string/callback_type_all_matches</item>
+    </string-array>
+</resources>
