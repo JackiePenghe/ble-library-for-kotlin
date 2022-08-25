@@ -21,4 +21,10 @@
     <item
         android:id="@+id/name_filter"
         android:title="@string/menu_name_filter" />
+    <item
+        android:id="@+id/mac_address_filter"
+        android:title="@string/menu_mac_address_filter" />
+    <item
+        android:id="@+id/clear_all_filter"
+        android:title="@string/menu_clear_all_filter" />
 </menu>

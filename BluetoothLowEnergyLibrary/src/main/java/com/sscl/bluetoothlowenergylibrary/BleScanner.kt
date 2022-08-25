@@ -331,7 +331,7 @@ class BleScanner {
     }
 
     /**
-     * 获取过滤名称的列表
+     * 获取 过滤名称-开头匹配 的列表
      */
     fun getFilterStartsNames(): ArrayList<String> {
         //返回一个新创建的对象，防止外部使用获取到的引用更改列表中的内容导致过滤条件出现异常
@@ -339,9 +339,9 @@ class BleScanner {
     }
 
     /**
-     * 获取过滤地址的列表
+     * 获取过滤地址-开头匹配的列表
      */
-    fun getFilterAddresses(): ArrayList<String> {
+    fun getFilterStartsAddresses(): ArrayList<String> {
         //返回一个新创建的对象，防止外部使用获取到的引用更改列表中的内容导致过滤条件出现异常
         return ArrayList(filterAddresses)
     }

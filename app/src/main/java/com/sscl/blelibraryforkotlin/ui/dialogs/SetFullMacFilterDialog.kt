@@ -7,9 +7,10 @@ import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chad.library.adapter.base.listener.OnItemClickListener
+import com.sscl.baselibrary.textwatcher.BluetoothAddressTextWatch
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
-import com.sscl.blelibraryforkotlin.databinding.DialogSetStartsFullFilterBinding
+import com.sscl.blelibraryforkotlin.databinding.DialogSetFullMacFilterBinding
 import com.sscl.blelibraryforkotlin.ui.adapters.StringListRecyclerViewAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingDialog
 import com.sscl.blelibraryforkotlin.utils.toastL
@@ -18,13 +19,13 @@ import com.sscl.bluetoothlowenergylibrary.BleScanner
 /**
  * 设置名称过滤-匹配名称开头 的对话框
  */
-class SetFullNameFilterDialog(context: Context, private val bleScanner: BleScanner) :
-    BaseDataBindingDialog<DialogSetStartsFullFilterBinding>(context) {
+class SetFullMacFilterDialog(context: Context, private val bleScanner: BleScanner) :
+    BaseDataBindingDialog<DialogSetFullMacFilterBinding>(context) {
     /**
      * 设置布局
      */
     override fun setLayout(): Int {
-        return R.layout.dialog_set_starts_full_filter
+        return R.layout.dialog_set_full_mac_filter
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -44,11 +45,11 @@ class SetFullNameFilterDialog(context: Context, private val bleScanner: BleScann
     private val onClickListener = View.OnClickListener {
         when (it.id) {
             binding.addNewBtn.id -> {
-                showAddFilterFullNameDialog()
+                showAddFilterFullMacDialog()
                 dismiss()
             }
             binding.clearBtn.id -> {
-                bleScanner.clearFilterFullName()
+                bleScanner.clearFilterFullAddress()
                 context.toastL(R.string.cleared)
                 dismiss()
             }
@@ -142,25 +143,27 @@ class SetFullNameFilterDialog(context: Context, private val bleScanner: BleScann
         binding.addedFilterListRv.layoutManager = LinearLayoutManager(context)
         binding.addedFilterListRv.addItemDecoration(DefaultItemDecoration.newLine(Color.GRAY))
         binding.addedFilterListRv.adapter = stringListRecyclerViewAdapter
-        stringListRecyclerViewAdapter.addData(bleScanner.getFilterFullNames())
+        stringListRecyclerViewAdapter.addData(bleScanner.getFilterFullAddresses())
     }
 
     /**
      * 显示添加设备名过滤-匹配开头的对话框
      */
-    private fun showAddFilterFullNameDialog() {
-        val view = View.inflate(context, R.layout.view_add_filter_full_name, null)
+    private fun showAddFilterFullMacDialog() {
+        val view = View.inflate(context, R.layout.view_add_filter_full_mac, null)
+        val editText = view.findViewById<EditText>(R.id.filter_full_mac_et)
+        editText.addTextChangedListener(BluetoothAddressTextWatch(editText))
         AlertDialog.Builder(context)
             .setTitle(R.string.add_new_filter)
             .setView(view)
             .setPositiveButton(R.string.confirm) { _, _ ->
                 val text =
-                    view.findViewById<EditText>(R.id.filter_full_name_et).text.toString()
+                    editText.text.toString()
                 if (text.isEmpty()) {
                     context.toastL(R.string.data_empty)
                     return@setPositiveButton
                 }
-                bleScanner.addFilterFullName(text)
+                bleScanner.addFilterFullAddress(text)
                 context.toastL(R.string.added)
             }
             .setNegativeButton(R.string.cancel, null)
@@ -175,11 +178,11 @@ class SetFullNameFilterDialog(context: Context, private val bleScanner: BleScann
             .setTitle(R.string.delete_filter_dialog_title)
             .setMessage(context.getString(R.string.delete_filter_dialog_msg, value))
             .setPositiveButton(R.string.confirm) { _, _ ->
-                bleScanner.removeFilterFullName(value)
+                bleScanner.removeFilterFullAddress(value)
                 stringListRecyclerViewAdapter.data.remove(value)
                 context.toastL(R.string.deleted)
             }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton(R.string.cancel,null)
             .show()
     }
 }

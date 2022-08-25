@@ -97,7 +97,7 @@ class SetStartNameFilterDialog(context: Context, private val bleScanner: BleScan
      * 初始化视图数据
      */
     override fun initViewData() {
-        initFilterStartsNamesRvData()
+        initFilterRvData()
     }
 
     /**
@@ -138,7 +138,7 @@ class SetStartNameFilterDialog(context: Context, private val bleScanner: BleScan
     /**
      * 初始化过滤名称-匹配开头列表数据
      */
-    private fun initFilterStartsNamesRvData() {
+    private fun initFilterRvData() {
         binding.addedFilterListRv.layoutManager = LinearLayoutManager(context)
         binding.addedFilterListRv.addItemDecoration(DefaultItemDecoration.newLine(Color.GRAY))
         binding.addedFilterListRv.adapter = stringListRecyclerViewAdapter

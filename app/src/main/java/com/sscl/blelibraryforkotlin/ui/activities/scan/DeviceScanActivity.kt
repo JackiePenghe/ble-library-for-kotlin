@@ -16,7 +16,9 @@ import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
 import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
+import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullMacFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullNameFilterDialog
+import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartMacFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartNameFilterDialog
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
@@ -243,6 +245,13 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             R.id.name_filter -> {
                 showNameFilterOptionsDialog()
             }
+            R.id.mac_address_filter -> {
+                showMacAddressFilterOptionsDialog()
+            }
+            R.id.clear_all_filter ->{
+                bleScanner.clearAllFilters()
+                toastL(R.string.cleared)
+            }
             else -> {
                 return false
             }
@@ -450,6 +459,45 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    /**
+     * 显示MAC地址过滤选项对话框
+     */
+    private fun showMacAddressFilterOptionsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.mac_address_filter_dialog_title)
+            .setItems(R.array.mac_filter_items) { _, which ->
+                when (which) {
+                    //匹配地址开头
+                    0 -> {
+                        showSetStartMacFilterNameDialog()
+                    }
+                    //匹配全地址
+                    1 -> {
+                        showSetFullMacFilterDialog()
+                    }
+                    else -> {
+                        warnOut("未处理的名称过滤条件")
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示 设置MAC地址-开头匹配过滤条件 的对话框
+     */
+    private fun showSetStartMacFilterNameDialog() {
+        SetStartMacFilterDialog(this,bleScanner).show()
+    }
+
+    /**
+     * 显示 设置MAC地址-全地址 过滤条件 的对话框
+     */
+    private fun showSetFullMacFilterDialog() {
+        SetFullMacFilterDialog(this,bleScanner).show()
     }
 
     /**

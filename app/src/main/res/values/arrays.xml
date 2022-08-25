@@ -17,4 +17,8 @@
         <item>@string/starts_name</item>
         <item>@string/full_name</item>
     </string-array>
+    <string-array name="mac_filter_items">
+        <item>@string/starts_address</item>
+        <item>@string/full_address</item>
+    </string-array>
 </resources>
