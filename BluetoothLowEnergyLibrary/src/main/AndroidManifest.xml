@@ -23,4 +23,11 @@
     <uses-feature
         android:name="android.bluetooth.le"
         android:required="true" />
+
+    <application>
+        <service
+            android:name=".services.singleconnect.BluetoothLeSingleConnectService"
+            android:enabled="true"
+            android:exported="false" />
+    </application>
 </manifest>

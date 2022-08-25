@@ -75,4 +75,20 @@
     <string name="full_address">匹配全地址</string>
     <string name="set_fll_mac_filter">MAc地址过滤-完全匹配</string>
     <string name="menu_clear_all_filter">清空全部过滤条件</string>
+    <string name="device_name_colon">设备名称：</string>
+    <string name="device_address_colon">设备MAC地址：</string>
+    <string name="set_connect_param_hint">可点击右上角菜单更改连接参数</string>
+    <string name="connect_device">连接设备</string>
+    <string name="connecting">正在连接</string>
+    <string name="disconnect_device">断开设备</string>
+    <string name="wrong_gatt_err">GATT出现错误，错误码%1$d</string>
+    <string name="null_" />
+    <string name="can_read">R</string>
+    <string name="can_write">W</string>
+    <string name="can_notify">N</string>
+    <string name="no_characteristic">此服务下没有可用的特征</string>
+    <string name="indicator_light_hint_title">状态指示颜色说明</string>
+    <string name="indicator_light_hint_content">红色-断开连接或未执行连接\n黄色-正在连接\n蓝色-已连接到设备\n绿色-服务发现成功(真正完成连接)\n品红-出现异常</string>
+    <string name="characteristic_hint_title">特征属性说明</string>
+    <string name="characteristic_hint_content">R 可读\nW 可写\nN 支持通知</string>
 </resources>

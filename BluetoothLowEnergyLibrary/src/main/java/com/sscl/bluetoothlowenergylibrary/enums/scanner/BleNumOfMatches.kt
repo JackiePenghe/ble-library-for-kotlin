@@ -1,4 +1,4 @@
-package com.sscl.bluetoothlowenergylibrary.enums
+package com.sscl.bluetoothlowenergylibrary.enums.scanner
 
 import androidx.annotation.RequiresApi
 import android.os.Build

@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activities.scan.DeviceScanActivity" />
+        <activity android:name=".ui.activities.connect.single.SingleConnectActivity" />
     </application>
 
 </manifest>

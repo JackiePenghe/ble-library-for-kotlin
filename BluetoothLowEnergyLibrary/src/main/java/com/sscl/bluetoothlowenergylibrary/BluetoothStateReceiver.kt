@@ -42,6 +42,57 @@ internal class BluetoothStateReceiver : BroadcastReceiver() {
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
     override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action ?: return
+        if (BluetoothAdapter.ACTION_STATE_CHANGED == action) {
+            when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)) {
+                BluetoothAdapter.STATE_OFF -> performBluetoothStateOffListener()
+                BluetoothAdapter.STATE_ON -> performBluetoothStateOnListener()
+                BluetoothAdapter.STATE_TURNING_OFF -> performBluetoothStateTurningOffListener()
+                BluetoothAdapter.STATE_TURNING_ON -> performBluetoothStateTurningOnListener()
+                else -> {}
+            }
+        }
+    }
 
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 私有方法
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * 触发蓝牙开关关闭的回调
+     */
+    private fun performBluetoothStateOffListener() {
+        for (onBluetoothStateChangedListener in BleManager.onBluetoothStateChangedListeners) {
+            onBluetoothStateChangedListener.onBluetoothDisable()
+        }
+    }
+
+    /**
+     * 触发蓝牙开关打开的回调
+     */
+    private fun performBluetoothStateOnListener() {
+        for (onBluetoothStateChangedListener in BleManager.onBluetoothStateChangedListeners) {
+            onBluetoothStateChangedListener.onBluetoothEnable()
+        }
+    }
+
+    /**
+     * 触发蓝牙开关正在关闭的回调
+     */
+    private fun performBluetoothStateTurningOffListener() {
+        for (onBluetoothStateChangedListener in BleManager.onBluetoothStateChangedListeners) {
+            onBluetoothStateChangedListener.onBluetoothDisabling()
+        }
+    }
+
+    /**
+     * 触发蓝牙开关正在打开的回调
+     */
+    private fun performBluetoothStateTurningOnListener() {
+        for (onBluetoothStateChangedListener in BleManager.onBluetoothStateChangedListeners) {
+            onBluetoothStateChangedListener.onBluetoothEnabling()
+        }
     }
 }

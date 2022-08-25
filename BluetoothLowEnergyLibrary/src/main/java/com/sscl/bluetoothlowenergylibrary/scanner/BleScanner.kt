@@ -1,4 +1,4 @@
-package com.sscl.bluetoothlowenergylibrary
+package com.sscl.bluetoothlowenergylibrary.scanner
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.*
@@ -6,7 +6,9 @@ import android.os.Build
 import android.os.ParcelUuid
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
-import com.sscl.bluetoothlowenergylibrary.enums.*
+import com.sscl.bluetoothlowenergylibrary.*
+import com.sscl.bluetoothlowenergylibrary.checkBluetoothSupport
+import com.sscl.bluetoothlowenergylibrary.enums.scanner.*
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
 import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
@@ -16,7 +18,7 @@ import kotlin.collections.ArrayList
 /**
  * BLE扫描器
  */
-class BleScanner {
+class BleScanner internal constructor(){
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -602,7 +604,7 @@ class BleScanner {
      */
     fun addFilterFullAddress(fullAddress: String): Boolean {
         val address = fullAddress.uppercase(Locale.getDefault())
-        if (!isValidBluetoothAddress(address)) {
+        if (!address.isValidBluetoothAddress()) {
             Logger.log(TAG, "MAC地址不合法")
             return false
         }
@@ -619,7 +621,7 @@ class BleScanner {
         val addressCaches = ArrayList<String>()
         for (address in fullAddresses) {
             val addressCache = address.uppercase(Locale.getDefault())
-            if (!isValidBluetoothAddress(address)) {
+            if (!address.isValidBluetoothAddress()) {
                 Logger.log(TAG, "MAC地址不合法")
                 continue
             }
@@ -724,7 +726,7 @@ class BleScanner {
         if (scanTimeout < 0) {
             return
         }
-        scanTimer = ScheduledThreadPoolExecutor(1, BleManager.threadFactory)
+        scanTimer = BleManager.newScheduledThreadPoolExecutor()
         scanTimer?.schedule(scanTimerRunnable, scanTimeout, TimeUnit.MILLISECONDS)
     }
 

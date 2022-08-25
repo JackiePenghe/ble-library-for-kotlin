@@ -35,9 +35,9 @@ internal fun Any.checkBluetoothSupport() {
 /**
  * 判断蓝牙MAC地址是否合法
  */
-internal fun Any.isValidBluetoothAddress(address: String): Boolean {
-    Logger.log(this.javaClass.simpleName, "验证蓝牙MAC地址是否合法：$address")
-    return BluetoothAdapter.checkBluetoothAddress(address)
+internal fun String.isValidBluetoothAddress(): Boolean {
+    Logger.log(this.javaClass.simpleName, "验证蓝牙MAC地址是否合法：$this")
+    return BluetoothAdapter.checkBluetoothAddress(this)
 }
 
 /**

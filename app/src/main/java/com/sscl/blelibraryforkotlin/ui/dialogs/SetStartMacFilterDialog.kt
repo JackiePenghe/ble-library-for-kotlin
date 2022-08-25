@@ -8,14 +8,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.sscl.baselibrary.textwatcher.BluetoothAddressTextWatch
-import com.sscl.baselibrary.textwatcher.HexTextAutoAddCharInputWatcher
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.DialogSetStartsMacFilterBinding
 import com.sscl.blelibraryforkotlin.ui.adapters.StringListRecyclerViewAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingDialog
 import com.sscl.blelibraryforkotlin.utils.toastL
-import com.sscl.bluetoothlowenergylibrary.BleScanner
+import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
 
 /**
  * 设置名称过滤-匹配名称开头 的对话框

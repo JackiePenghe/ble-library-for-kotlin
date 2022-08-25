@@ -40,8 +40,8 @@ android {
     signingConfigs {
         def alias = "app_key_6_number"
         def password = "123456"
-        def filePath = "appKey.jks"  //签名文件路径 如：../faceprint.jks
-        def storePassword1 = "123456"  //签名文件路径 如：../faceprint.jks
+        def filePath = "appKey.jks"
+        def storePassword1 = "123456"  
         debug {
             keyAlias alias
             keyPassword password

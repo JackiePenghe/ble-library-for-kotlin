@@ -1,6 +1,7 @@
 package com.sscl.blelibraryforkotlin.ui.activities.scan
 
 import android.bluetooth.le.ScanResult
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.view.Menu
@@ -14,21 +15,23 @@ import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
+import com.sscl.blelibraryforkotlin.ui.activities.connect.single.SingleConnectActivity
 import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullMacFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullNameFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartMacFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartNameFilterDialog
+import com.sscl.blelibraryforkotlin.utils.IntentConstants
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
 import com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
-import com.sscl.bluetoothlowenergylibrary.BleScanner
-import com.sscl.bluetoothlowenergylibrary.enums.BleCallbackType
-import com.sscl.bluetoothlowenergylibrary.enums.BleMatchMode
-import com.sscl.bluetoothlowenergylibrary.enums.BleScanMode
-import com.sscl.bluetoothlowenergylibrary.enums.BleScanPhy
+import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
+import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleCallbackType
+import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleMatchMode
+import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanMode
+import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanPhy
 import com.sscl.bluetoothlowenergylibrary.getFailMsg
 import com.sscl.bluetoothlowenergylibrary.indexOfScanResults
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
@@ -248,7 +251,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             R.id.mac_address_filter -> {
                 showMacAddressFilterOptionsDialog()
             }
-            R.id.clear_all_filter ->{
+            R.id.clear_all_filter -> {
                 bleScanner.clearAllFilters()
                 toastL(R.string.cleared)
             }
@@ -490,14 +493,14 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
      * 显示 设置MAC地址-开头匹配过滤条件 的对话框
      */
     private fun showSetStartMacFilterNameDialog() {
-        SetStartMacFilterDialog(this,bleScanner).show()
+        SetStartMacFilterDialog(this, bleScanner).show()
     }
 
     /**
      * 显示 设置MAC地址-全地址 过滤条件 的对话框
      */
     private fun showSetFullMacFilterDialog() {
-        SetFullMacFilterDialog(this,bleScanner).show()
+        SetFullMacFilterDialog(this, bleScanner).show()
     }
 
     /**
@@ -524,7 +527,9 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
                 deviceScanActivityViewModel.searchBtnText.value = getString(R.string.start_scan)
             }
         }
-        TODO("跳转到设备连接界面 未实现")
+        val intent = Intent(this, SingleConnectActivity::class.java)
+        intent.putExtra(IntentConstants.SCAN_RESULT, scanResult)
+        startActivity(intent)
     }
 
 }

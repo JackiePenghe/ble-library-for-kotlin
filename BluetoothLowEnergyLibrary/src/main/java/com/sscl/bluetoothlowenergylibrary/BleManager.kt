@@ -1,15 +1,20 @@
 package com.sscl.bluetoothlowenergylibrary
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import com.sscl.bluetoothlowenergylibrary.exceptions.BluetoothLENotSupportException
+import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
+import com.sscl.bluetoothlowenergylibrary.intefaces.OnBluetoothStateChangedListener
+import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
+import com.sscl.bluetoothlowenergylibrary.services.singleconnect.BluetoothLeSingleConnectService
+import com.sscl.bluetoothlowenergylibrary.services.singleconnect.BluetoothSingleConnectServiceConnection
+import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadFactory
 
 /**
@@ -51,6 +56,17 @@ object BleManager {
      */
     private val bleScanners = ArrayList<BleScanner>()
 
+    /**
+     * 蓝牙单个服务连接器
+     */
+    private val bluetoothSingleConnectServiceConnection = BluetoothSingleConnectServiceConnection()
+
+    /**
+     * 蓝牙状态变化的回调监听
+     */
+    internal val onBluetoothStateChangedListeners = ArrayList<OnBluetoothStateChangedListener>()
+
+
     /* * * * * * * * * * * * * * * * * * * 延时初始化属性 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -70,12 +86,17 @@ object BleManager {
      */
     private var initialized = false
 
+    /**
+     * 记录单个设备连接服务是否已经执行过绑定
+     */
+    private var bindSingleConnectServiceExecute = false
+
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
     /**
      * 蓝牙管理器
      */
-    private var bluetoothManager: BluetoothManager? = null
+    internal var bluetoothManager: BluetoothManager? = null
 
     /**
      * 蓝牙适配器
@@ -87,11 +108,30 @@ object BleManager {
      */
     private var bleScannerInstance: BleScanner? = null
 
+    /**
+     * 单个设备连接器
+     */
+    internal var bleSingleConnector: BleSingleConnector? = null
+
+    /**
+     * 蓝牙单连接服务
+     */
+    internal var singleConnectService: BluetoothLeSingleConnectService? = null
+
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
      * 方法声明
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /* * * * * * * * * * * * * * * * * * * 内部方法 * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * 创建一个线程定时任务
+     */
+    internal fun newScheduledThreadPoolExecutor(): ScheduledThreadPoolExecutor {
+        return ScheduledThreadPoolExecutor(1, threadFactory)
+    }
 
     /* * * * * * * * * * * * * * * * * * * 公开方法 * * * * * * * * * * * * * * * * * * */
 
@@ -110,6 +150,7 @@ object BleManager {
         Logger.log(TAG, "bluetoothManager = $bluetoothManager")
         bluetoothAdapter = bluetoothManager?.adapter
         Logger.log(TAG, "bluetoothAdapter = $bluetoothAdapter")
+        bindSingleConnectService()
         initialized = true
     }
 
@@ -125,7 +166,7 @@ object BleManager {
             return false
         }
         val adapter = bluetoothAdapter ?: return false
-        if (!hasBluetoothConnectPermission()){
+        if (!hasBluetoothConnectPermission()) {
             return false
         }
         return if (enable) {
@@ -133,6 +174,31 @@ object BleManager {
         } else {
             adapter.disable()
         }
+    }
+
+    /**
+     * 添加蓝牙状态变化回调监听
+     *
+     * @param onBluetoothStateChangedListener 蓝牙状态变化回调监听
+     */
+    fun addOnBluetoothStateChangedListener(onBluetoothStateChangedListener: OnBluetoothStateChangedListener) {
+        onBluetoothStateChangedListeners.add(onBluetoothStateChangedListener)
+    }
+
+    /**
+     * 移除蓝牙状态变化回调监听
+     *
+     * @param onBluetoothStateChangedListener 蓝牙状态变化回调监听
+     */
+    fun removeOnBluetoothStateChangedListener(onBluetoothStateChangedListener: OnBluetoothStateChangedListener) {
+        onBluetoothStateChangedListeners.remove(onBluetoothStateChangedListener)
+    }
+
+    /**
+     * 清空蓝牙状态变化回调监听
+     */
+    fun removeAllOnBluetoothStateChangedListener() {
+        onBluetoothStateChangedListeners.clear()
     }
 
     /**
@@ -145,6 +211,18 @@ object BleManager {
             bleScannerInstance = BleScanner()
         }
         return bleScannerInstance!!
+    }
+
+    /**
+     * 获取蓝牙连接器单例
+     */
+    @Synchronized
+    fun getBleConnectorInstance(): BleSingleConnector {
+        checkInitialState()
+        if (bleSingleConnector == null){
+            bleSingleConnector = BleSingleConnector()
+        }
+        return bleSingleConnector!!
     }
 
     /**
@@ -192,6 +270,14 @@ object BleManager {
         bleScannerInstance = null
     }
 
+    /**
+     * 释放单设备BLE连接器
+     */
+    fun releaseBleConnectorInstance() {
+        bleSingleConnector?.close()
+        bleSingleConnector = null
+    }
+
     /* * * * * * * * * * * * * * * * * * * 私有方法 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -213,5 +299,22 @@ object BleManager {
         if (!initialized) {
             throw IllegalStateException("未初始化，请先初始化")
         }
+    }
+
+    /**
+     * 绑定单个设备连接的服务
+     */
+    @Synchronized
+    private fun bindSingleConnectService() {
+        if (bindSingleConnectServiceExecute) {
+            return
+        }
+        val intent = Intent(context, BluetoothLeSingleConnectService::class.java)
+        val succeed = context.bindService(
+            intent,
+            bluetoothSingleConnectServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+        Logger.log(TAG, "绑定单个蓝牙连接的服务：$succeed")
     }
 }
