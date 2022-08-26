@@ -2,10 +2,7 @@ package com.sscl.bluetoothlowenergylibrary.services.singleconnect
 
 import android.annotation.SuppressLint
 import android.app.Service
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattService
+import android.bluetooth.*
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -16,6 +13,7 @@ import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
 import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
 import com.sscl.bluetoothlowenergylibrary.hasBluetoothConnectPermission
 import com.sscl.bluetoothlowenergylibrary.isValidBluetoothAddress
+import com.sscl.bluetoothlowenergylibrary.utils.BleConstants
 import java.util.*
 
 class BluetoothLeSingleConnectService : Service() {
@@ -45,6 +43,9 @@ class BluetoothLeSingleConnectService : Service() {
 
     /* * * * * * * * * * * * * * * * * * * 延时初始化属性 * * * * * * * * * * * * * * * * * * */
 
+    /**
+     * 服务Binder类
+     */
     private lateinit var bluetoothLeSingleConnectServiceBinder: BluetoothLeSingleConnectServiceBinder
 
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
@@ -83,6 +84,11 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 连接设备
+     * @param address 设备地址
+     * @param autoReconnect 是否自动重连
+     * @param bleConnectTransport  GATT连接到远程双模设备的首选传输方式
+     * @param bleConnectPhyMask       用于连接到远程设备的首选物理层
+     * @return 是否执行成功
      */
     @Synchronized
     internal fun connect(
@@ -113,6 +119,11 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 连接设备
+     * @param bluetoothDevice 设备
+     * @param autoReconnect 是否自动重连
+     * @param bleConnectTransport  GATT连接到远程双模设备的首选传输方式
+     * @param bleConnectPhyMask       用于连接到远程设备的首选物理层
+     * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
     @Synchronized
@@ -154,6 +165,7 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 发现服务
+     * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
     internal fun discoverServices(): Boolean {
@@ -168,6 +180,7 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 断开设备连接
+     * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
     internal fun disconnect(): Boolean {
@@ -183,6 +196,7 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 获取服务列表
+     * @return 服务列表
      */
     internal fun getServices(): MutableList<BluetoothGattService>? {
         val result = bluetoothGatt?.services
@@ -243,6 +257,7 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 关闭GATT
+     * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
     internal fun closeGatt(): Boolean {
@@ -252,7 +267,91 @@ class BluetoothLeSingleConnectService : Service() {
             bluetoothGatt?.close()
             bluetoothGatt != null
         }
+        bluetoothGatt = null
         Logger.log(TAG, "关闭GATT result $result")
+        return result
+    }
+
+    /**
+     * 读取数据
+     * @param characteristic BluetoothGattCharacteristic
+     * @return 是否执行成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun readData(characteristic: BluetoothGattCharacteristic): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            if (!canRead(characteristic)) {
+                false
+            } else {
+                bluetoothGatt?.readCharacteristic(characteristic)
+                bluetoothGatt != null
+            }
+        }
+        Logger.log(TAG, "读取特征数据 result $result")
+        return result
+    }
+
+    /**
+     * 写入数据
+     * @param characteristic BluetoothGattCharacteristic
+     * @param byteArray 数据
+     * @return 是否执行成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun writeData(
+        characteristic: BluetoothGattCharacteristic,
+        byteArray: ByteArray
+    ): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            if (!canWrite(characteristic)) {
+                false
+            } else {
+                characteristic.value = byteArray
+                bluetoothGatt?.writeCharacteristic(characteristic) ?: false
+            }
+        }
+        Logger.log(TAG, "写入特征数据 result $result")
+        return result
+    }
+
+    /**
+     * 打开通知
+     */
+    @SuppressLint("MissingPermission")
+    internal fun enableNotification(
+        characteristic: BluetoothGattCharacteristic,
+        enable: Boolean
+    ): Boolean {
+        val result: Boolean
+        if (!hasBluetoothConnectPermission()) {
+            result = false
+        } else {
+            if (!canNotify(characteristic)) {
+                result = false
+            } else {
+                val cacheResult =
+                    bluetoothGatt?.setCharacteristicNotification(characteristic, enable) ?: false
+                if (!cacheResult) {
+                    result = false
+                } else {
+                    val bluetoothGattDescriptor: BluetoothGattDescriptor? =
+                        characteristic.getDescriptor(UUID.fromString(BleConstants.CLIENT_CHARACTERISTIC_CONFIG))
+                    if (bluetoothGattDescriptor == null) {
+                        Logger.log(TAG, "bluetoothGattDescriptor == null")
+                        result = true
+                    } else {
+                        bluetoothGattDescriptor.value =
+                            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        result = bluetoothGatt?.writeDescriptor(bluetoothGattDescriptor) ?: false
+                    }
+                }
+            }
+        }
+        Logger.log(TAG, "打开通知 result $result")
         return result
     }
 }

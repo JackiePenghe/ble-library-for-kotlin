@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.Logger
 import com.sscl.bluetoothlowenergylibrary.hasBluetoothConnectPermission
+import com.sscl.bluetoothlowenergylibrary.toHexString
 
 /**
  * BLE GATT 回调
@@ -92,11 +93,12 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
      * successfully.
      */
     override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-        Logger.log(TAG, "发现服务完成")
         BleManager.bleSingleConnector?.stopConnectTimeoutTimer()
         if (BluetoothGatt.GATT_SUCCESS != status) {
-            performGattPerformTaskFailedListener(status, "onServicesDiscovered")
+            Logger.log(TAG, "发现服务失败 status $status")
+            performGattStatusErrorListener(status)
         } else {
+            Logger.log(TAG, "发现服务完成")
             performDeviceServicesDiscoveredListener()
         }
     }
@@ -114,8 +116,14 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
-        Logger.log(TAG, "onCharacteristicRead")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "读取特征数据失败")
+            performGattStatusErrorListener(status)
+        } else {
+            val value = characteristic.value
+            Logger.log(TAG, "读取特征数据成功 value = ${value.toHexString()}")
+            performDeviceCharacteristicReadListener(characteristic, value)
+        }
     }
 
     /**
@@ -134,7 +142,14 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         status: Int
     ) {
         Logger.log(TAG, "onCharacteristicWrite")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "写入特征数据失败")
+            performGattStatusErrorListener(status)
+        } else {
+            val value = characteristic.value
+            Logger.log(TAG, "写入特征数据成功 value = ${value.toHexString()}")
+            performDeviceCharacteristicWriteListener(characteristic, value)
+        }
     }
 
     /**
@@ -148,7 +163,9 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         characteristic: BluetoothGattCharacteristic
     ) {
         Logger.log(TAG, "onReceivedNotification")
-        //TODO
+        val value = characteristic.value
+        Logger.log(TAG, "特征数据有通知 value = ${value.toHexString()}")
+        performDeviceCharacteristicNotifyListener(characteristic, value)
     }
 
     /**
@@ -260,7 +277,7 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
 
     private fun performDeviceDisconnectedListener() {
         BleManager.handler.post {
-            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.disconnected()
+            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.onDisconnected()
         }
     }
 
@@ -274,7 +291,7 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
 
     private fun performDeviceConnectedListener() {
         BleManager.handler.post {
-            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.connected()
+            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.onConnected()
         }
     }
 
@@ -286,24 +303,51 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
 
     private fun performGattUnknownStatusListener(newState: Int) {
         BleManager.handler.post {
-            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.unknownStatus(
+            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.unknownConnectStatus(
                 newState
-            )
-        }
-    }
-
-    private fun performGattPerformTaskFailedListener(status: Int, methodName: String) {
-        BleManager.handler.post {
-            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.gattPerformTaskFailed(
-                status,
-                methodName
             )
         }
     }
 
     private fun performDeviceServicesDiscoveredListener() {
         BleManager.handler.post {
-            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.servicesDiscovered()
+            BleManager.bleSingleConnector?.onBleConnectStateChangedListener?.onServicesDiscovered()
+        }
+    }
+
+    private fun performDeviceCharacteristicReadListener(
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray
+    ) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onCharacteristicReadDataListener?.onCharacteristicReadData(
+                characteristic,
+                value
+            )
+        }
+    }
+
+    private fun performDeviceCharacteristicWriteListener(
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray
+    ) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onCharacteristicWriteDataListener?.onCharacteristicWriteData(
+                characteristic,
+                value
+            )
+        }
+    }
+
+    private fun performDeviceCharacteristicNotifyListener(
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray
+    ) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onCharacteristicNotifyDataListener?.onCharacteristicNotifyData(
+                characteristic,
+                value
+            )
         }
     }
 }

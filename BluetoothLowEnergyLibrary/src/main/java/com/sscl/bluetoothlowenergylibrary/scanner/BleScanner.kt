@@ -18,7 +18,7 @@ import kotlin.collections.ArrayList
 /**
  * BLE扫描器
  */
-class BleScanner internal constructor(){
+class BleScanner internal constructor() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -171,7 +171,7 @@ class BleScanner internal constructor(){
      * 扫描结果中是否只返回旧广告。对于
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private val legacy = false
+    private var legacy = false
 
     /**
      * 扫描物理层-仅当legacy为false时有效
@@ -289,6 +289,14 @@ class BleScanner internal constructor(){
     @RequiresApi(api = Build.VERSION_CODES.O)
     fun setScanPhy(bleScanPhy: BleScanPhy) {
         this.bleScanPhy = bleScanPhy
+    }
+
+    /**
+     * 设置是否只返回旧版广播包
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setLegacy(legacy: Boolean) {
+        this.legacy = legacy
     }
 
     /**

@@ -127,7 +127,7 @@ class SetStartMacFilterDialog(context: Context, private val bleScanner: BleScann
      * 是否cancelable
      */
     override fun needCancelable(): Boolean {
-        return true
+        return false
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

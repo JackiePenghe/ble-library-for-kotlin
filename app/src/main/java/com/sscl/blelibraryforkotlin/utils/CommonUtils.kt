@@ -8,6 +8,8 @@ import androidx.appcompat.app.AlertDialog
 import com.sscl.baselibrary.utils.DebugUtil
 import com.sscl.baselibrary.utils.ToastUtil
 import com.sscl.blelibraryforkotlin.R
+import java.util.*
+import kotlin.experimental.and
 
 private var connectingDialog: AlertDialog? = null
 
@@ -27,6 +29,10 @@ fun Any.warnOut(msg: String) {
     DebugUtil.warnOut(this.javaClass.simpleName, msg)
 }
 
+fun Any.errorOut(msg: String) {
+    DebugUtil.errorOut(this.javaClass.simpleName, msg)
+}
+
 fun Context.showConnecting() {
     dismissConnecting(false)
     warnOut("showConnecting")
@@ -42,4 +48,22 @@ fun Context.dismissConnecting(needLog: Boolean = true) {
     }
     connectingDialog?.dismiss()
     connectingDialog = null
+}
+
+fun Byte?.toHexString(): String? {
+    this ?: return null
+    val hexString = Integer.toHexString(toInt() and 0xFF).uppercase(Locale.CHINA)
+    if (hexString.length == 1) {
+        return "0$hexString"
+    }
+    return hexString
+}
+
+fun Int?.toHexString(): String? {
+    this ?: return null
+    val hexString = Integer.toHexString(this).uppercase(Locale.CHINA)
+    if (hexString.length == 1) {
+        return "0$hexString"
+    }
+    return hexString
 }

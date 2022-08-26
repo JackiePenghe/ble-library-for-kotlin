@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chad.library.adapter.base.listener.OnItemClickListener
+import com.chad.library.adapter.base.listener.OnItemLongClickListener
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
@@ -27,7 +28,6 @@ import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
 import com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
-import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
 import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleCallbackType
 import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleMatchMode
 import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanMode
@@ -35,6 +35,7 @@ import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanPhy
 import com.sscl.bluetoothlowenergylibrary.getFailMsg
 import com.sscl.bluetoothlowenergylibrary.indexOfScanResults
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
+import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
 
 /**
  * 设备扫描界面
@@ -64,6 +65,14 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     }
 
     /**
+     * 设备列表长按事件
+     */
+    private val onItemLongClickListener = OnItemLongClickListener { adapter, view, position ->
+        showDeviceOptionDialog(scanResultAdapter.data[position])
+        return@OnItemLongClickListener true
+    }
+
+    /**
      * 蓝牙扫描回调
      */
     private val onBleScanListener = object : OnBleScanListener {
@@ -84,6 +93,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
          */
         override fun onScanFindOneDevice(scanResult: ScanResult) {
             //do nothing
+//            errorOut("scanRecord ${scanResult.scanRecord?.bytes?.toHexString()}")
         }
 
         /**
@@ -205,6 +215,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     override fun initEvents() {
         binding.searchBtn.setOnClickListener(onClickListener)
         scanResultAdapter.setOnItemClickListener(onItemClickListener)
+        scanResultAdapter.setOnItemLongClickListener(onItemLongClickListener)
     }
 
     /**
@@ -254,6 +265,9 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             R.id.clear_all_filter -> {
                 bleScanner.clearAllFilters()
                 toastL(R.string.cleared)
+            }
+            R.id.use_legacy -> {
+                showUseLegacyDialog()
             }
             else -> {
                 return false
@@ -394,6 +408,31 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     }
 
     /**
+     * 显示使用旧版广播包的设置对话框
+     */
+    private fun showUseLegacyDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            toastL(R.string.legacy_not_support_with_low_system_version)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.use_legacy_dialog_title)
+            .setItems(R.array.booleans) { _, which ->
+                when (which) {
+                    //是
+                    0 -> {
+                        bleScanner.setLegacy(true)
+                    }
+                    1 -> {
+                        bleScanner.setLegacy(false)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
      * 显示设置扫描时长的对话框
      */
     private fun showSetBleScanTimeoutDialog() {
@@ -528,6 +567,41 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             }
         }
         val intent = Intent(this, SingleConnectActivity::class.java)
+        intent.putExtra(IntentConstants.SCAN_RESULT, scanResult)
+        startActivity(intent)
+    }
+
+    /**
+     * 显示设备操作选项的对话框
+     */
+    private fun showDeviceOptionDialog(scanResult: ScanResult) {
+        if (bleScanner.scanning) {
+            bleScanner.stopScan()
+            deviceScanActivityViewModel.searchBtnText.value = getString(R.string.start_scan)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.device_options_dialog_title)
+            .setItems(R.array.device_options) { _, which ->
+                when (which) {
+                    //连接设备
+                    0 -> {
+                        toConnectActivity(scanResult)
+                    }
+                    //查看设备广播包
+                    1 -> {
+                        toScanRecordParseActivity(scanResult)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 跳转到广播包解析界面
+     */
+    private fun toScanRecordParseActivity(scanResult: ScanResult) {
+        val intent = Intent(this, ScanRecordParseActivity::class.java)
         intent.putExtra(IntentConstants.SCAN_RESULT, scanResult)
         startActivity(intent)
     }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <import
+            alias="CommonUtils1"
+            type="com.sscl.blelibraryforkotlin.utils.CommonUtilsKt" />
+
+        <import
+            alias="CommonUtils2"
+            type="com.sscl.baselibrary.utils.CommonUtilsKt" />
+
+        <variable
+            name="advertiseStruct"
+            type="com.sscl.bluetoothlowenergylibrary.AdvertiseStruct" />
+    </data>
+
+    <LinearLayout
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:text="@{``+advertiseStruct.length+`(0x`+CommonUtils1.toHexString(advertiseStruct.length)+`)`}" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:text="@{``+advertiseStruct.type+`(0x`+CommonUtils1.toHexString(advertiseStruct.type)+`)`}" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="6"
+            android:text="@{CommonUtils2.toHexStringWithSpace(advertiseStruct.data)}" />
+    </LinearLayout>
+</layout>

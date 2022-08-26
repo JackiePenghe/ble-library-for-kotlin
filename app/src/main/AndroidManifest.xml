@@ -27,6 +27,7 @@
         </activity>
         <activity android:name=".ui.activities.scan.DeviceScanActivity" />
         <activity android:name=".ui.activities.connect.single.SingleConnectActivity" />
+        <activity android:name=".ui.activities.scan.ScanRecordParseActivity" />
     </application>
 
 </manifest>

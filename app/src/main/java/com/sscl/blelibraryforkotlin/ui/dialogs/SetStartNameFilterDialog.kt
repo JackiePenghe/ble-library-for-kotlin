@@ -126,7 +126,7 @@ class SetStartNameFilterDialog(context: Context, private val bleScanner: BleScan
      * 是否cancelable
      */
     override fun needCancelable(): Boolean {
-        return true
+        return false
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

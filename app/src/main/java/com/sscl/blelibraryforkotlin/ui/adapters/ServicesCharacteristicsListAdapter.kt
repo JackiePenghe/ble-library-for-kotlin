@@ -8,7 +8,7 @@ import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentit
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.ServiceUuidItem
 
 /**
- * @author jacke
+ * @author jackie
  * @date 2018/1/22 0022
  */
 class ServicesCharacteristicsListAdapter : BaseNodeAdapter() {

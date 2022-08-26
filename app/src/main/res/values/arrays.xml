@@ -21,4 +21,21 @@
         <item>@string/starts_address</item>
         <item>@string/full_address</item>
     </string-array>
+    <string-array name="options">
+        <item>@string/read_data</item>
+        <item>@string/write_data</item>
+        <item>@string/enable_notify</item>
+    </string-array>
+    <string-array name="write_data_types">
+        <item>@string/string</item>
+        <item>@string/hex</item>
+    </string-array>
+    <string-array name="device_options">
+        <item>@string/connect_device</item>
+        <item>@string/view_scan_record</item>
+    </string-array>
+    <string-array name="booleans">
+        <item>@string/yes</item>
+        <item>@string/no</item>
+    </string-array>
 </resources>

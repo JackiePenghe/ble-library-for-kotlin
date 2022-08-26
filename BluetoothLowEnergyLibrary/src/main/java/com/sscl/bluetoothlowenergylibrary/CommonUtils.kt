@@ -1,16 +1,21 @@
 package com.sscl.bluetoothlowenergylibrary
 
 import android.Manifest
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.pm.PackageManager
-import android.location.Address
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import com.sscl.bluetoothlowenergylibrary.exceptions.BluetoothLENotSupportException
 import com.sscl.bluetoothlowenergylibrary.exceptions.BluetoothNotSupportException
+import java.util.*
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * 内部方法
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /**
  * 验证设备是否支持蓝牙BLE
@@ -85,6 +90,27 @@ internal fun Any.hasBluetoothConnectPermission(): Boolean {
         true
     }
 }
+
+/**
+ * 字节数组转十六进制字符串
+ */
+internal fun ByteArray?.toHexString(): String {
+    this?:return ""
+    var stmp: String
+    val sb = StringBuilder()
+    for (aByte in this) {
+        stmp = Integer.toHexString(aByte.toInt() and 0xFF)
+        sb.append(if (stmp.length == 1) "0$stmp" else stmp)
+        sb.append(" ")
+    }
+    return sb.toString().uppercase(Locale.getDefault()).trim()
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * 公开方法
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /**
  * 判断是否扫描结果列表中是否包含某个扫描结果

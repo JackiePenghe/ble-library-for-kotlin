@@ -1,7 +1,11 @@
 package com.sscl.bluetoothlowenergylibrary.utils
 
-import com.sscl.bluetoothlowenergylibrary.utils.BleUtils
-import java.util.HashMap
+import android.bluetooth.le.ScanRecord
+import android.bluetooth.le.ScanResult
+import com.sscl.bluetoothlowenergylibrary.AdvertiseStruct
+import com.sscl.bluetoothlowenergylibrary.ServiceDataInfo
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * UUID名称获取工具类
@@ -9,16 +13,11 @@ import java.util.HashMap
  * @author jackie
  */
 object BleUtils {
+
+    private val TAG: String = BleUtils::class.java.simpleName
+
     private val ATTRIBUTES: MutableMap<String, String> = HashMap()
     private val HEX_ARRAY = "0123456789ABCDEF".toCharArray()
-
-    fun getServiceUuidName(uuidStr: String): String {
-        return ATTRIBUTES[uuidStr] ?: "Unknown Services"
-    }
-
-    fun getCharacteristicsUuidName(uuidStr: String): String {
-        return ATTRIBUTES[uuidStr]?:"Unknown Characteristics"
-    }
 
     init {
         ATTRIBUTES["00001800-0000-1000-8000-00805f9b34fb"] = "GenericAccess"
@@ -232,5 +231,91 @@ object BleUtils {
         ATTRIBUTES["0000ffa3-0000-1000-8000-00805f9b34fb"] = "ACCEL_X"
         ATTRIBUTES["0000ffa4-0000-1000-8000-00805f9b34fb"] = "ACCEL_Y"
         ATTRIBUTES["0000ffa5-0000-1000-8000-00805f9b34fb"] = "ACCEL_Z"
+    }
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 公开方法
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * 通过UUID字符串获取服务名称
+     */
+    fun getServiceUuidName(uuidStr: String): String {
+        return ATTRIBUTES[uuidStr] ?: "Unknown Services"
+    }
+
+    /**
+     * 通过UUID字符串获取特征名称
+     */
+    fun getCharacteristicsUuidName(uuidStr: String): String {
+        return ATTRIBUTES[uuidStr] ?: "Unknown Characteristics"
+    }
+
+    /**
+     * 获取设备的AD结构列表
+     *
+     * @return AD结构列表
+     */
+    fun getAdvertiseRecords(scanRecord: ScanRecord): ArrayList<AdvertiseStruct> {
+        val parseScanRecord = parseScanRecord(scanRecord.bytes)
+        val advertiseStructs = ArrayList<AdvertiseStruct>()
+        val entries = parseScanRecord.entries
+        for (entry in entries) {
+            val type = entry.key
+            val data: ByteArray = entry.value
+            val length = data.size + 1
+            val advertiseRecord = AdvertiseStruct(length, type, data)
+            advertiseStructs.add(advertiseRecord)
+        }
+        return advertiseStructs
+    }
+
+    /**
+     * 获取全部服务信息的列表
+     */
+    fun getServiceDataInfoList(scanRecord: ScanRecord): ArrayList<ServiceDataInfo> {
+        val result = ArrayList<ServiceDataInfo>()
+        val serviceData = scanRecord.serviceData ?: return result
+        if (serviceData.isEmpty()) {
+            return result
+        }
+        for (data in serviceData) {
+            result.add(ServiceDataInfo(data.key, data.value))
+        }
+        return result
+    }
+
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 私有方法
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * 将完整的广播包解析成AdRecord集合
+     *
+     * @param scanRecordBytes 完整的广播包
+     */
+    private fun parseScanRecord(scanRecordBytes: ByteArray): HashMap<Byte, ByteArray> {
+        val bleSparseArray = HashMap<Byte, ByteArray>()
+        var length: Byte
+        var index = 0
+        while (index < scanRecordBytes.size) {
+            length = scanRecordBytes[index++]
+            if (length.toInt() == 0) {
+                break
+            }
+            val type = scanRecordBytes[index].toInt()
+            if (type == 0) {
+                break
+            }
+            val data = scanRecordBytes.copyOfRange(index + 1, index + length)
+            bleSparseArray[(type and 0xFF).toByte()] = data
+            index += length.toInt()
+        }
+        return bleSparseArray
     }
 }
