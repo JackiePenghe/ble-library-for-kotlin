@@ -534,16 +534,15 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray
     ) {
-        saveToLog(characteristic.uuid.toString(), value)
-//        val stringValue = String(value)
-//        val hexValue = value.toHexStringWithSpace() ?: ""
-//        AlertDialog.Builder(this)
-//            .setTitle(R.string.notify_data_dialog_title)
-//            .setMessage(
-//                "数据来源：${characteristic.uuid}\n十六进制：$hexValue\n字符串：$stringValue"
-//            )
-//            .setPositiveButton(R.string.confirm, null)
-//            .show()
+        val stringValue = String(value)
+        val hexValue = value.toHexStringWithSpace() ?: ""
+        AlertDialog.Builder(this)
+            .setTitle(R.string.notify_data_dialog_title)
+            .setMessage(
+                "数据来源：${characteristic.uuid}\n十六进制：$hexValue\n字符串：$stringValue"
+            )
+            .setPositiveButton(R.string.confirm, null)
+            .show()
     }
 
     /**
