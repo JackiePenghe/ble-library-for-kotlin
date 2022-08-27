@@ -5,7 +5,9 @@ import android.graphics.Color
 import android.os.Build
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.baselibrary.utils.Tool
 import com.sscl.baselibrary.utils.toHexStringWithSpace
@@ -18,6 +20,9 @@ import com.sscl.blelibraryforkotlin.utils.IntentConstants
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
 import com.sscl.blelibraryforkotlin.viewmodels.ScanRecordParseActivityViewModel
+import com.sscl.bluetoothlowenergylibrary.AdvertiseStruct
+import com.sscl.bluetoothlowenergylibrary.ServiceDataInfo
+import com.sscl.bluetoothlowenergylibrary.toByteArray
 import com.sscl.bluetoothlowenergylibrary.utils.BleUtils
 
 /**
@@ -74,6 +79,17 @@ class ScanRecordParseActivity : BaseDataBindingActivity<ActivityScanRecordParseB
     private val scanRecordServiceDataRecyclerViewAdapter =
         ScanRecordServiceDataRecyclerViewAdapter()
 
+    /**
+     * 列表选项点击事件
+     */
+    private val onItemClickListener = OnItemClickListener { adapter, view, position ->
+        if (adapter == scanRecordParseAdStructRecyclerViewAdapter) {
+            showAdStructItemOptionsDialog(scanRecordParseAdStructRecyclerViewAdapter.data[position])
+        } else if (adapter == scanRecordServiceDataRecyclerViewAdapter) {
+            showServiceDataOptionsDialog(scanRecordServiceDataRecyclerViewAdapter.data[position])
+        }
+    }
+
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -122,6 +138,8 @@ class ScanRecordParseActivity : BaseDataBindingActivity<ActivityScanRecordParseB
      */
     override fun initEvents() {
         binding.copyScanRecordBtn.setOnClickListener(onClickListener)
+        scanRecordParseAdStructRecyclerViewAdapter.setOnItemClickListener(onItemClickListener)
+        scanRecordServiceDataRecyclerViewAdapter.setOnItemClickListener(onItemClickListener)
     }
 
     /**
@@ -203,5 +221,74 @@ class ScanRecordParseActivity : BaseDataBindingActivity<ActivityScanRecordParseB
         }
         val txPowerLevel = scanRecord.txPowerLevel
         warnOut("txPowerLevel $txPowerLevel")
+    }
+
+    /**
+     * 显示AD结构的选项被点击的操作选项
+     */
+    private fun showAdStructItemOptionsDialog(advertiseStruct: AdvertiseStruct) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.ad_struct_options_dialog_title)
+            .setItems(R.array.ad_struct_options) { _, which ->
+                when (which) {
+                    //复制整个AD结构数据
+                    0 -> {
+                        val byteArray = advertiseStruct.toByteArray()
+                        Tool.setDataToClipboard(
+                            this@ScanRecordParseActivity,
+                            TAG,
+                            byteArray.toHexStringWithSpace() ?: ""
+                        )
+                        toastL(R.string.ad_struct_copied)
+                    }
+                    //仅复制AD数据
+                    1 -> {
+                        val data = advertiseStruct.data
+                        Tool.setDataToClipboard(
+                            this@ScanRecordParseActivity,
+                            TAG,
+                            data.toHexStringWithSpace() ?: ""
+                        )
+                        toastL(R.string.ad_data_copied)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示服务信息的选项被点击的操作选项
+     */
+    private fun showServiceDataOptionsDialog(serviceDataInfo: ServiceDataInfo) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.service_data_options_dialog_title)
+            .setItems(R.array.service_data_options) { _, which ->
+                when (which) {
+                    //复制服务UUID
+                    0 -> {
+                        val uuidString = serviceDataInfo.parcelUuid.toString()
+                        Tool.setDataToClipboard(
+                            this@ScanRecordParseActivity,
+                            TAG,
+                            uuidString
+                        )
+                        toastL(R.string.service_uuid_copied)
+                    }
+                    //仅复制AD数据
+                    1 -> {
+                        val data = serviceDataInfo.value
+                        warnOut(data.toHexStringWithSpace())
+                        Tool.setDataToClipboard(
+                            this@ScanRecordParseActivity,
+                            TAG,
+                            data.toHexStringWithSpace() ?: ""
+                        )
+                        toastL(R.string.service_data_copied)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 }

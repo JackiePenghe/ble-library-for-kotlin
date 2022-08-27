@@ -182,7 +182,14 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         status: Int
     ) {
         Logger.log(TAG, "onDescriptorRead")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "读取描述数据失败")
+            performGattStatusErrorListener(status)
+        } else {
+            val value = descriptor.value
+            Logger.log(TAG, "读取描述数据成功 value = ${value.toHexString()}")
+            performDeviceDescriptorReadListener(descriptor, value)
+        }
     }
 
     /**
@@ -199,7 +206,14 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         status: Int
     ) {
         Logger.log(TAG, "onDescriptorWrite")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "写入描述数据失败")
+            performGattStatusErrorListener(status)
+        } else {
+            val value = descriptor.value
+            Logger.log(TAG, "写入描述数据成功 value = ${value.toHexString()}")
+            performDeviceDescriptorWriteListener(descriptor, value)
+        }
     }
 
     /**
@@ -346,6 +360,30 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
         BleManager.handler.post {
             BleManager.bleSingleConnector?.onCharacteristicNotifyDataListener?.onCharacteristicNotifyData(
                 characteristic,
+                value
+            )
+        }
+    }
+
+    private fun performDeviceDescriptorReadListener(
+        descriptor: BluetoothGattDescriptor,
+        value: ByteArray
+    ) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onDescriptorReadDataListener?.onDescriptorReadData(
+                descriptor,
+                value
+            )
+        }
+    }
+
+    private fun performDeviceDescriptorWriteListener(
+        descriptor: BluetoothGattDescriptor,
+        value: ByteArray
+    ) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onDescriptorWriteDataListener?.onDescriptorWriteData(
+                descriptor,
                 value
             )
         }

@@ -2,16 +2,14 @@ package com.sscl.bluetoothlowenergylibrary.connetor.single
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.checkBleSupport
 import com.sscl.bluetoothlowenergylibrary.checkBluetoothSupport
 import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
 import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleConnectStateChangedListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicNotifyDataListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicReadDataListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicWriteDataListener
+import com.sscl.bluetoothlowenergylibrary.intefaces.*
 import java.util.*
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -20,6 +18,21 @@ import java.util.concurrent.TimeUnit
  * BLE单个设备连接器
  */
 class BleSingleConnector internal constructor() {
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 静态声明
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    companion object {
+        private val TAG: String = BleSingleConnector::class.java.simpleName
+
+        /**
+         * 默认的连接超时
+         */
+        private const val DEFAULT_CONNECT_TIMEOUT = 6000L
+    }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -43,7 +56,7 @@ class BleSingleConnector internal constructor() {
     /**
      * 连接超时时间-默认值 6000毫秒（6秒）
      */
-    private var connectTimeout = 6000L
+    private var connectTimeout = DEFAULT_CONNECT_TIMEOUT
 
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
@@ -71,6 +84,16 @@ class BleSingleConnector internal constructor() {
      * 特征通知回调
      */
     internal var onCharacteristicNotifyDataListener: OnCharacteristicNotifyDataListener? = null
+
+    /**
+     * 描述读取回调
+     */
+    internal var onDescriptorReadDataListener: OnDescriptorReadDataListener? = null
+
+    /**
+     * 描述写入回调
+     */
+    internal var onDescriptorWriteDataListener: OnDescriptorWriteDataListener? = null
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -111,6 +134,7 @@ class BleSingleConnector internal constructor() {
      * @return true表示请求已成功发起
      */
     @Synchronized
+    @JvmOverloads
     fun connect(
         address: String,
         autoReconnect: Boolean = false,
@@ -141,6 +165,7 @@ class BleSingleConnector internal constructor() {
      * @return true表示请求已成功发起，真正的连接结果在回调中
      */
     @Synchronized
+    @JvmOverloads
     fun connect(
         bluetoothDevice: BluetoothDevice,
         autoReconnect: Boolean = false,
@@ -155,7 +180,6 @@ class BleSingleConnector internal constructor() {
             phyMask
         )
         if (result) {
-//            closed = false
             startConnectTimeoutTimer()
         }
         return result
@@ -172,10 +196,15 @@ class BleSingleConnector internal constructor() {
 
     /**
      * 设置连接超时时间，单位：毫秒
+     * 设置为0表示使用默认值
      * @param connectTimeout  连接超时时间，单位：毫秒
      */
     fun setConnectTimeout(connectTimeout: Long) {
-        this.connectTimeout = connectTimeout
+        if (connectTimeout > 0) {
+            this.connectTimeout = connectTimeout
+        } else {
+            this.connectTimeout = DEFAULT_CONNECT_TIMEOUT
+        }
     }
 
     /**
@@ -211,6 +240,22 @@ class BleSingleConnector internal constructor() {
     }
 
     /**
+     * 设置描述读取回调
+     * @param onDescriptorReadDataListener 描述读取回调
+     */
+    fun setOnDescriptorReadDataListener(onDescriptorReadDataListener: OnDescriptorReadDataListener?) {
+        this.onDescriptorReadDataListener = onDescriptorReadDataListener
+    }
+
+    /**
+     * 设置描述读取回调
+     * @param onDescriptorWriteDataListener 描述写入回调
+     */
+    fun setOnDescriptorWriteDataListener(onDescriptorWriteDataListener: OnDescriptorWriteDataListener?) {
+        this.onDescriptorWriteDataListener = onDescriptorWriteDataListener
+    }
+
+    /**
      * 发现服务
      * @return 是否执行成功
      */
@@ -225,81 +270,6 @@ class BleSingleConnector internal constructor() {
     fun getServices(): MutableList<BluetoothGattService>? {
         val singleConnectService = BleManager.singleConnectService ?: return null
         return singleConnectService.getServices()
-    }
-
-    /**
-     * 判断某个特征是否可读
-     * @param serviceUuidString 服务UUID字符串
-     * @param characteristicUuidString 特征UUID字符串
-     * @return 是否执行成功
-     */
-    fun canRead(serviceUuidString: String, characteristicUuidString: String): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
-        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
-            ?: return false
-
-        return canRead(characteristic)
-    }
-
-    /**
-     * 判断某个特征是否可读
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示可读
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun canRead(characteristic: BluetoothGattCharacteristic): Boolean {
-        return BleManager.singleConnectService?.canRead(characteristic) ?: false
-    }
-
-    /**
-     * 判断某个特征是否可写
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示可写
-     */
-    fun canWrite(serviceUUID: String, characteristicUUID: String): Boolean {
-        val service = getService(UUID.fromString(serviceUUID)) ?: return false
-        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID))
-            ?: return false
-        return canWrite(characteristic)
-    }
-
-    /**
-     * 判断某个特征是否可写
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示可写
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun canWrite(characteristic: BluetoothGattCharacteristic): Boolean {
-        return BleManager.singleConnectService?.canWrite(characteristic) ?: false
-    }
-
-    /**
-     * 判断某个特征是否支持通知
-     *
-     * @param serviceUUID        服务UUID
-     * @param characteristicUUID 特征UUID
-     * @return true表示支持通知
-     */
-    fun canNotify(serviceUUID: String, characteristicUUID: String): Boolean {
-        val service = getService(UUID.fromString(serviceUUID)) ?: return false
-        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID))
-            ?: return false
-        return canNotify(characteristic)
-    }
-
-    /**
-     * 判断某个特征是否支持通知
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示支持通知
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun canNotify(characteristic: BluetoothGattCharacteristic): Boolean {
-        return BleManager.singleConnectService?.canNotify(characteristic) ?: false
     }
 
     /**
@@ -319,11 +289,14 @@ class BleSingleConnector internal constructor() {
      * @param characteristicUuidString 特征UUID字符串
      * @return  是否执行成功
      */
-    fun readData(serviceUuidString: String, characteristicUuidString: String): Boolean {
+    fun readCharacteristicData(
+        serviceUuidString: String,
+        characteristicUuidString: String
+    ): Boolean {
         val service = getService(UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
-        return readData(characteristic)
+        return readCharacteristicData(characteristic)
     }
 
     /**
@@ -332,8 +305,8 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun readData(characteristic: BluetoothGattCharacteristic): Boolean {
-        return BleManager.singleConnectService?.readData(characteristic) ?: false
+    fun readCharacteristicData(characteristic: BluetoothGattCharacteristic): Boolean {
+        return BleManager.singleConnectService?.readCharacteristicData(characteristic) ?: false
     }
 
     /**
@@ -346,6 +319,7 @@ class BleSingleConnector internal constructor() {
 
     /**
      * 关闭GATT
+     * 除非出现gatt err
      * @return  是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
@@ -354,13 +328,13 @@ class BleSingleConnector internal constructor() {
     }
 
     /**
-     * 写入数据
+     * 写入特征数据
      * @param serviceUuidString 服务UUID字符串
      * @param characteristicUuidString 特征UUID字符串
      * @param byteArray 数据内容
      * @return 是否执行成功
      */
-    fun writeData(
+    fun writeCharacteristicData(
         serviceUuidString: String,
         characteristicUuidString: String,
         byteArray: ByteArray
@@ -368,21 +342,22 @@ class BleSingleConnector internal constructor() {
         val service = getService(UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
-        return writeData(characteristic, byteArray)
+        return writeCharacteristicData(characteristic, byteArray)
     }
 
     /**
-     * 写入数据
+     * 写入特征数据
      * @param characteristic BluetoothGattCharacteristic
      * @param byteArray 数据内容
      * @return 是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun writeData(
+    fun writeCharacteristicData(
         characteristic: BluetoothGattCharacteristic,
         byteArray: ByteArray
     ): Boolean {
-        return BleManager.singleConnectService?.writeData(characteristic, byteArray) ?: false
+        return BleManager.singleConnectService?.writeCharacteristicData(characteristic, byteArray)
+            ?: false
     }
 
     /**
@@ -415,6 +390,182 @@ class BleSingleConnector internal constructor() {
         enable: Boolean
     ): Boolean {
         return BleManager.singleConnectService?.enableNotification(characteristic, enable) ?: false
+    }
+
+    /**
+     * 为给定的远程设备启动可靠的写入事务。
+     * 此方法并非全部BLE设备都支持,需要先确认设备是否处理了此方式的数据写入
+     * 一旦启动了可靠的写入事务，所有对 [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.writeCharacteristicData] 的调用都会发送到远程设备进行验证并排队等待执行。
+     * 应用程序将收到一个 [com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicWriteDataListener.onCharacteristicWriteData]回调
+     * 回调以响应每个  [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.writeCharacteristicData] 调用，并负责验证该值是否已准确传输。
+     * 在所有特征都排队并验证后，[com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.executeReliableWrite] 将执行所有写入。
+     * 如果未正确写入特征，则调用 [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.abortReliableWrite] 将取消当前事务，而不在远程设备上提交任何值。
+     * @return true 可靠的写事务已经启动
+     */
+    fun beginReliableWrite(): Boolean {
+        return BleManager.singleConnectService?.beginReliableWrite() ?: false
+    }
+
+    /**
+     * 取消本次可靠写入模式下写入的数据
+     * @return 是否请求成功
+     */
+    fun abortReliableWrite(): Boolean {
+        return BleManager.singleConnectService?.abortReliableWrite() ?: false
+    }
+
+    /**
+     * 将可靠模式下写入的数据应用到设备中
+     * @return 是否请求成功
+     */
+    fun executeReliableWrite(): Boolean {
+        return BleManager.singleConnectService?.executeReliableWrite() ?: false
+    }
+
+    /**
+     * 读取描述数据
+     * @param serviceUuidString 服务UUID字符串
+     * @param characteristicUuidString 特征UUID字符串
+     * @param descriptorUuidString 描述UUID字符串
+     * @return 是否执行成功
+     */
+    fun readDescriptorData(
+        serviceUuidString: String,
+        characteristicUuidString: String,
+        descriptorUuidString: String
+    ): Boolean {
+        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
+            ?: return false
+        val descriptor =
+            characteristic.getDescriptor(UUID.fromString(descriptorUuidString)) ?: return false
+        return readDescriptorData(descriptor)
+    }
+
+    /**
+     * 读取描述数据
+     * @param descriptor BluetoothGattDescriptor
+     * @return 是否执行成功
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun readDescriptorData(descriptor: BluetoothGattDescriptor): Boolean {
+        return BleManager.singleConnectService?.readDescriptorData(descriptor) ?: return false
+    }
+
+    /**
+     * 判断某个描述是否有相应的权限
+     *
+     * @param serviceUuidString 服务UUID字符串
+     * @param characteristicUuidString 特征UUID字符串
+     * @param descriptorUuidString 描述UUID字符串
+     * @param permissions 需要判断的权限,同时判断多个权限可用或运算传入参数
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM]
+     *
+     * @return 是否有相应的权限
+     */
+    fun checkDescriptorPermission(
+        serviceUuidString: String,
+        characteristicUuidString: String,
+        descriptorUuidString: String,
+        permissions: Int
+    ): Boolean {
+        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
+            ?: return false
+        val descriptor =
+            characteristic.getDescriptor(UUID.fromString(descriptorUuidString)) ?: return false
+        return checkDescriptorPermission(descriptor, permissions)
+    }
+
+    /**
+     * 判断某个描述是否有相应的权限
+     * @param descriptor BluetoothGattDescriptor
+     * @param permissions 请传入以下参数,同时判断多个权限请使用或运算将权限传入
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM]
+     *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM]
+     */
+    fun checkDescriptorPermission(descriptor: BluetoothGattDescriptor, permissions: Int): Boolean {
+        return BleManager.singleConnectService?.checkDescriptorPermission(descriptor, permissions)
+            ?: false
+    }
+
+    /**
+     *判断某个特征是否有对应的属性
+     * @param serviceUuidString 服务UUID字符串
+     * @param characteristicUuidString 特征UUID字符串
+     * @return 是否有对应的属性
+     */
+    fun checkCharacteristicProperties(
+        serviceUuidString: String,
+        characteristicUuidString: String,
+        properties: Int
+    ): Boolean {
+        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
+            ?: return false
+        return checkCharacteristicProperties(characteristic, properties)
+    }
+
+    /**
+     * 判断某个特征是否有对应的属性
+     *  @param characteristic BluetoothGattCharacteristic
+     *  @param properties 属性
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun checkCharacteristicProperties(
+        characteristic: BluetoothGattCharacteristic,
+        properties: Int
+    ): Boolean {
+        return BleManager.singleConnectService?.checkCharacteristicProperty(
+            characteristic,
+            properties
+        ) ?: false
+    }
+
+    /**
+     * 写入描述文件数据
+     *
+     * @param serviceUuidString 服务UUID字符串
+     * @param characteristicUuidString 特征UUID字符串
+     * @param descriptorUuidString 描述UUID字符串
+     * @return 是否执行成功
+     */
+    fun writeDescriptorData(
+        serviceUuidString: String,
+        characteristicUuidString: String,
+        descriptorUuidString: String,
+        value: ByteArray
+    ): Boolean {
+        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
+            ?: return false
+        val descriptor =
+            characteristic.getDescriptor(UUID.fromString(descriptorUuidString)) ?: return false
+        return writeDescriptorData(descriptor, value)
+    }
+
+    /**
+     * 写入描述文件数据
+     * @param descriptor BluetoothGattDescriptor
+     * @return 是否执行成功
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun writeDescriptorData(descriptor: BluetoothGattDescriptor, value: ByteArray): Boolean {
+        return BleManager.singleConnectService?.writeDescriptorData(descriptor, value)
+            ?: return false
     }
 
     /* * * * * * * * * * * * * * * * * * * 私有方法 * * * * * * * * * * * * * * * * * * */

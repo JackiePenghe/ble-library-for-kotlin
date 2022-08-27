@@ -17,25 +17,53 @@
         <item>@string/starts_name</item>
         <item>@string/full_name</item>
     </string-array>
+
+    <!--  MAC地址过滤选项  -->
     <string-array name="mac_filter_items">
         <item>@string/starts_address</item>
         <item>@string/full_address</item>
     </string-array>
-    <string-array name="options">
+
+    <!--  特征的操作选项  -->
+    <string-array name="characteristic_options">
         <item>@string/read_data</item>
         <item>@string/write_data</item>
         <item>@string/enable_notify</item>
     </string-array>
+
+    <!--  写入数据时,数据的类型  -->
     <string-array name="write_data_types">
         <item>@string/string</item>
         <item>@string/hex</item>
     </string-array>
-    <string-array name="device_options">
+
+    <!--  扫描到的设备的设备操作选项  -->
+    <string-array name="scanned_device_options">
         <item>@string/connect_device</item>
         <item>@string/view_scan_record</item>
     </string-array>
+
+    <!--  布尔值选项  -->
     <string-array name="booleans">
         <item>@string/yes</item>
         <item>@string/no</item>
+    </string-array>
+
+    <!--  AD结构的操作选项  -->
+    <string-array name="ad_struct_options">
+        <item>@string/copy_all_ad_struct_data</item>
+        <item>@string/copy_ad_data_only</item>
+    </string-array>
+
+    <!--  服务数据的操作选项  -->
+    <string-array name="service_data_options">
+        <item>@string/copy_service_uuid</item>
+        <item>@string/copy_service_data</item>
+    </string-array>
+
+    <!--  描述的操作选项  -->
+    <string-array name="descriptor_options">
+        <item>@string/read_data</item>
+        <item>@string/write_data</item>
     </string-array>
 </resources>

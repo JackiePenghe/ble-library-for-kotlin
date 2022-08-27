@@ -3,8 +3,10 @@ package com.sscl.blelibraryforkotlin.ui.adapters
 import com.chad.library.adapter.base.BaseNodeAdapter
 import com.chad.library.adapter.base.entity.node.BaseNode
 import com.sscl.blelibraryforkotlin.ui.adapters.provider.CharacteristicUuidProvider
+import com.sscl.blelibraryforkotlin.ui.adapters.provider.DescriptorUuidProvider
 import com.sscl.blelibraryforkotlin.ui.adapters.provider.ServiceUuidProvider
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.CharacteristicUuidItem
+import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.DescriptorUuidItem
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.ServiceUuidItem
 
 /**
@@ -22,8 +24,8 @@ class ServicesCharacteristicsListAdapter : BaseNodeAdapter() {
     companion object {
         const val TYPE_SERVICE_UUID = 0
         const val TYPE_CHARACTERISTIC_UUID = 1
+        const val TYPE_DESCRIPTOR_UUID = 2
         const val TYPE_UNKNOWN = -1
-        const val EXPAND_COLLAPSE_PAYLOAD = 110
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -35,6 +37,7 @@ class ServicesCharacteristicsListAdapter : BaseNodeAdapter() {
     init {
         addNodeProvider(ServiceUuidProvider())
         addNodeProvider(CharacteristicUuidProvider())
+        addNodeProvider(DescriptorUuidProvider())
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -50,6 +53,9 @@ class ServicesCharacteristicsListAdapter : BaseNodeAdapter() {
             }
             is CharacteristicUuidItem -> {
                 TYPE_CHARACTERISTIC_UUID
+            }
+            is DescriptorUuidItem -> {
+                TYPE_DESCRIPTOR_UUID
             }
             else -> {
                 TYPE_UNKNOWN

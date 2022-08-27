@@ -7,13 +7,11 @@ import android.os.ParcelUuid
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.*
-import com.sscl.bluetoothlowenergylibrary.checkBluetoothSupport
 import com.sscl.bluetoothlowenergylibrary.enums.scanner.*
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
 import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 /**
  * BLE扫描器
@@ -175,6 +173,7 @@ class BleScanner internal constructor() {
 
     /**
      * 扫描物理层-仅当legacy为false时有效
+     * 如果设置
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
     private var bleScanPhy = BleScanPhy.PHY_LE_ALL_SUPPORTED
@@ -285,9 +284,11 @@ class BleScanner internal constructor() {
 
     /**
      * 设置扫描物理层
+     * 使用[com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanPhy.PHY_LE_CODED]
+     * 请务必判断[com.sscl.bluetoothlowenergylibrary.BleManager.isLeCodedPhySupported]
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    fun setScanPhy(bleScanPhy: BleScanPhy) {
+    fun setBleScanPhy(bleScanPhy: BleScanPhy) {
         this.bleScanPhy = bleScanPhy
     }
 
@@ -410,7 +411,7 @@ class BleScanner internal constructor() {
      *
      * @return 扫描结果
      */
-    fun getScanResults(): java.util.ArrayList<ScanResult> {
+    fun getScanResults(): ArrayList<ScanResult> {
         return scanResults
     }
 
@@ -717,11 +718,8 @@ class BleScanner internal constructor() {
                 .setNumOfMatches(bleNumOfMatches.numOfMatches)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Logger.log(TAG, "安卓版本支持手动设置legacy与phy,使用对应的变量值")
             builder.setLegacy(legacy)
-            if (BleManager.bluetoothAdapter?.isLeCodedPhySupported == true) {
-                builder.setPhy(bleScanPhy.value)
-            }
+            builder.setPhy(bleScanPhy.value)
         }
         return builder.build()
     }

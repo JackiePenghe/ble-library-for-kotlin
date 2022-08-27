@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--  蓝牙扫描物理层  -->
     <string-array name="ble_scan_phy">
-        <item>@string/phy_le_all_supported</item>
-        <item>@string/phy_le_1m</item>
-        <item>@string/phy_le_coded</item>
+        <item>@string/scan_phy_le_all_supported</item>
+        <item>@string/scan_phy_le_1m</item>
+        <item>@string/scan_phy_le_coded</item>
+    </string-array>
+    <!--  蓝牙连接物理层  -->
+    <string-array name="ble_connect_phy_mask">
+        <item>@string/connect_phy_le_1m_mask</item>
+        <item>@string/connect_phy_le_2m_mask</item>
+        <item>@string/connect_phy_le_coded_mask</item>
     </string-array>
 </resources>

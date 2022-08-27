@@ -2,7 +2,12 @@
 <resources>
 
     <!--  扫描物理层  -->
-    <string name="phy_le_all_supported">全部物理层</string>
-    <string name="phy_le_1m">LE 1M</string>
-    <string name="phy_le_coded">LE CODED</string>
+    <string name="scan_phy_le_all_supported">全部物理层</string>
+    <string name="scan_phy_le_1m">LE 1M</string>
+    <string name="scan_phy_le_coded">LE CODED</string>
+
+    <!--  连接物理层  -->
+    <string name="connect_phy_le_1m_mask">LE 1M</string>
+    <string name="connect_phy_le_2m_mask">LE 2M</string>
+    <string name="connect_phy_le_coded_mask">LE CODED</string>
 </resources>

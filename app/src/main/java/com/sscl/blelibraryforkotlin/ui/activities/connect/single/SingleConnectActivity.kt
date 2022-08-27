@@ -2,23 +2,31 @@ package com.sscl.blelibraryforkotlin.ui.activities.connect.single
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.le.ScanResult
 import android.graphics.Color
+import android.os.Build
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chad.library.adapter.base.entity.node.BaseNode
 import com.chad.library.adapter.base.listener.OnItemClickListener
-import com.sscl.baselibrary.files.FileUtil
+import com.chad.library.adapter.base.listener.OnItemLongClickListener
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.baselibrary.utils.Tool
 import com.sscl.baselibrary.utils.getByteArray
 import com.sscl.baselibrary.utils.toHexStringWithSpace
+import com.sscl.blelibraryforkotlin.MyApp
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivitySingleConnectBinding
 import com.sscl.blelibraryforkotlin.ui.adapters.ServicesCharacteristicsListAdapter
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.CharacteristicUuidItem
+import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.DescriptorUuidItem
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.ServiceUuidItem
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.dialogs.WriteDataDialog
@@ -26,13 +34,10 @@ import com.sscl.blelibraryforkotlin.utils.*
 import com.sscl.blelibraryforkotlin.viewmodels.SingleConnectActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleConnectStateChangedListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicNotifyDataListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicReadDataListener
-import com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicWriteDataListener
+import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
+import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.intefaces.*
 import com.sscl.bluetoothlowenergylibrary.utils.BleUtils
-import java.io.File
-import java.io.FileWriter
 
 /**
  * 单个设备连接界面
@@ -44,6 +49,51 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     override fun setLayout(): Int {
         return R.layout.activity_single_connect
+    }
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
+     * 静态声明
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    companion object {
+        /**
+         * 默认的重连参数
+         */
+        private const val DEFAULT_RECONNECT = false
+
+        /**
+         * 默认的GATT传输层
+         */
+        @RequiresApi(Build.VERSION_CODES.M)
+        private val DEFAULT_BLE_CONNECT_TRANSPORT = BleConnectTransport.TRANSPORT_AUTO
+
+        /**
+         * 默认的GATT传输层名称
+         */
+        private val DEFAULT_BLE_CONNECT_TRANSPORT_NAME =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                MyApp.instance.getString(R.string.transport_auto)
+            } else {
+                MyApp.instance.getString(R.string.ble_connect_transport_not_support_with_low_system_version)
+            }
+
+        /**
+         * 默认的GATT物理层
+         */
+        @RequiresApi(Build.VERSION_CODES.O)
+        private val DEFAULT_BLE_CONNECT_PHY_MASK = BleConnectPhyMask.PHY_LE_1M_MASK
+
+        /**
+         * 默认的GATT物理层名称
+         */
+        private val DEFAULT_BLE_CONNECT_PHY_MASK_NAME =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                MyApp.instance.getString(R.string.connect_phy_le_1m_mask)
+            } else {
+                MyApp.instance.getString(R.string.ble_connect_phy_mask_not_support_with_low_system_version)
+            }
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -92,21 +142,23 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
          * 但是通常情况下这依然会失败
          */
         override fun autoDiscoverServicesFailed() {
-            binding.circlePointView.setColor(Color.RED)
-            bleConnectorInstance.disconnect()
             dismissConnecting()
+            binding.circlePointView.setColor(Color.MAGENTA)
+            bleConnectorInstance.close()
+            toastL(R.string.discover_services_failed)
         }
 
         /**
-         * 未知的操作GATT状态码
+         * 未知的连接状态
          *
-         * @param statusCode GATT状态码
+         * @param statusCode 参考[android.bluetooth.BluetoothGatt]
          */
         override fun unknownConnectStatus(statusCode: Int) {
             warnOut("GATT连接状态未知")
             dismissConnecting()
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
+            toastL(getString(R.string.connect_state_err, statusCode))
         }
 
         /**
@@ -118,6 +170,9 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             singleConnectActivityViewModel.buttonText.value = getString(R.string.disconnect_device)
             dismissConnecting()
             refreshAdapterData()
+            toastL(R.string.connected)
+            val succeed = bleConnectorInstance.beginReliableWrite()
+            warnOut("beginReliableWrite $succeed")
         }
 
         /**
@@ -127,6 +182,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             dismissConnecting()
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
+            toastL(R.string.connect_timeout)
         }
 
         /**
@@ -136,6 +192,8 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             dismissConnecting()
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
+            isConnected = false
+            singleConnectActivityViewModel.buttonText.value = getString(R.string.connect_device)
             toastL(getString(R.string.wrong_gatt_err, gattErrorCode))
         }
     }
@@ -145,7 +203,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private val onCharacteristicReadDataListener =
         OnCharacteristicReadDataListener { characteristic, value ->
-            showReadDataResultDialog(characteristic, value)
+            showReadDataResultDialog(characteristic.uuid.toString(), value)
         }
 
     /**
@@ -153,7 +211,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private val onCharacteristicWriteDataListener =
         OnCharacteristicWriteDataListener { characteristic, value ->
-            showWriteDataResultDialog(characteristic, value)
+            showWriteDataResultDialog(characteristic.uuid.toString(), value)
         }
 
     /**
@@ -163,6 +221,20 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         OnCharacteristicNotifyDataListener { characteristic, value ->
             showNotifyDataDialog(characteristic, value)
         }
+
+    /**
+     * 描述读取回调
+     */
+    private val onDescriptorReadDataListener = OnDescriptorReadDataListener { descriptor, value ->
+        showReadDataResultDialog(descriptor.uuid.toString(), value)
+    }
+
+    /**
+     * 描述写入回调
+     */
+    private val onDescriptorWriteDataListener = OnDescriptorWriteDataListener { descriptor, value ->
+        showWriteDataResultDialog(descriptor.uuid.toString(), value)
+    }
 
     /**
      * viewModel
@@ -193,32 +265,88 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
                 )
                 val baseNode: BaseNode =
                     servicesCharacteristicsListAdapter.data[position]
-                if (baseNode is ServiceUuidItem) {
-                    if (!baseNode.isExpanded) {
-                        val childNode: List<BaseNode> = baseNode.childNode
-                        if (childNode.isEmpty()) {
-                            toastL(
-                                R.string.no_characteristic,
-                            )
-                            return@OnItemClickListener
+                when (baseNode) {
+                    is ServiceUuidItem -> {
+                        if (!baseNode.isExpanded) {
+                            val childNode: List<BaseNode> = baseNode.childNode
+                            if (childNode.isEmpty()) {
+                                toastL(
+                                    R.string.no_characteristic,
+                                )
+                                return@OnItemClickListener
+                            }
+                            servicesCharacteristicsListAdapter.expandAndCollapseOther(position)
+                        } else {
+                            servicesCharacteristicsListAdapter.collapse(position)
                         }
-                        servicesCharacteristicsListAdapter.expandAndCollapseOther(position)
-                    } else {
-                        servicesCharacteristicsListAdapter.collapse(position)
+                        serviceUuid = if (baseNode.isExpanded) {
+                            baseNode.uuid
+                        } else {
+                            null
+                        }
                     }
-                    serviceUuid = if (baseNode.isExpanded) {
-                        baseNode.uuid
-                    } else {
-                        null
+                    is CharacteristicUuidItem -> {
+                        if (!baseNode.isExpanded) {
+                            val childNode: List<BaseNode> = baseNode.childNode
+                            if (childNode.isEmpty()) {
+                                showCharacteristicOptionsDialog(baseNode)
+                                return@OnItemClickListener
+                            }
+                            servicesCharacteristicsListAdapter.expandAndCollapseOther(position)
+                        } else {
+                            servicesCharacteristicsListAdapter.collapse(position)
+                        }
+                        characteristicUuid = if (baseNode.isExpanded) {
+                            baseNode.uuid
+                        } else {
+                            null
+                        }
                     }
-                } else if (baseNode is CharacteristicUuidItem) {
-                    warnOut(
-                        "serviceUUID = $serviceUuid,characteristicUUID = $baseNode"
-                    )
-                    showOptionsDialog(serviceUuid ?: return@OnItemClickListener, baseNode.uuid)
+                    is DescriptorUuidItem -> {
+                        warnOut(
+                            "characteristicUUID = $characteristicUuid,descriptorUuid = ${baseNode.uuid}"
+                        )
+                        showDescriptorOptionsDialog(
+                            baseNode
+                        )
+                    }
                 }
             }
         }
+
+    private val onItemLongClickListener = OnItemLongClickListener { adapter, _, position ->
+        if (adapter == servicesCharacteristicsListAdapter) {
+            warnOut(
+                "servicesCharacteristicsListAdapter onItemClick position = $position"
+            )
+            val baseNode: BaseNode =
+                servicesCharacteristicsListAdapter.data[position]
+            when (baseNode) {
+                is ServiceUuidItem -> {
+                    warnOut(
+                        "serviceUUID = ${baseNode.uuid}"
+                    )
+                    toastL(baseNode.uuid)
+                }
+                is CharacteristicUuidItem -> {
+                    warnOut(
+                        "serviceUUID = $serviceUuid,characteristicUUID = ${baseNode.uuid}"
+                    )
+                    showCharacteristicOptionsDialog(baseNode)
+
+                }
+                is DescriptorUuidItem -> {
+                    warnOut(
+                        "characteristicUUID = $characteristicUuid,descriptorUuid = ${baseNode.uuid}"
+                    )
+                    showDescriptorOptionsDialog(baseNode)
+                    toastL(baseNode.uuid)
+                }
+            }
+
+        }
+        return@OnItemLongClickListener true
+    }
 
     /* * * * * * * * * * * * * * * * * * * 延时初始化属性 * * * * * * * * * * * * * * * * * * */
 
@@ -246,6 +374,11 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private var serviceUuid: String? = null
 
+    /**
+     * 特征UUID缓存
+     */
+    private var characteristicUuid: String? = null
+
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
      * 实现方法
@@ -263,6 +396,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     override fun doBeforeInitOthers() {
         binding.viewModel = singleConnectActivityViewModel
+        initViewModelData()
     }
 
     /**
@@ -285,6 +419,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     override fun initEvents() {
         binding.button.setOnClickListener(onClickListener)
         servicesCharacteristicsListAdapter.setOnItemClickListener(onItemClickListener)
+        servicesCharacteristicsListAdapter.setOnItemLongClickListener(onItemLongClickListener)
     }
 
     /**
@@ -307,9 +442,34 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.activity_single_connect, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.auto_reconnect -> {
+                showSetAutoReconnectDialog()
+            }
+            R.id.ble_connect_transport -> {
+                showSetBleConnectTransportDialog()
+            }
+            R.id.ble_connect_phy_mask -> {
+                showSetBleConnectPhyMaskDialog()
+            }
+            R.id.ble_connect_timeout -> {
+                showSetConnectTimeoutDialog()
+            }
+            else -> {
+                return false
+            }
+        }
+        return true
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        bleConnectorInstance.disconnect()
         BleManager.releaseBleConnectorInstance()
     }
 
@@ -337,6 +497,22 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         bleConnectorInstance.setOnCharacteristicNotifyDataListener(
             onCharacteristicNotifyDataListener
         )
+        bleConnectorInstance.setOnDescriptorReadDataListener(onDescriptorReadDataListener)
+        bleConnectorInstance.setOnDescriptorWriteDataListener(onDescriptorWriteDataListener)
+    }
+
+    private fun initViewModelData() {
+        singleConnectActivityViewModel.autoReconnect.value = DEFAULT_RECONNECT
+        singleConnectActivityViewModel.bleConnectTransportName.value =
+            DEFAULT_BLE_CONNECT_TRANSPORT_NAME
+        singleConnectActivityViewModel.bleConnectPhyMaskName.value =
+            DEFAULT_BLE_CONNECT_PHY_MASK_NAME
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            singleConnectActivityViewModel.bleConnectTransport.value = DEFAULT_BLE_CONNECT_TRANSPORT
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            singleConnectActivityViewModel.bleConnectPhyMask.value = DEFAULT_BLE_CONNECT_PHY_MASK
+        }
     }
 
     /**
@@ -348,12 +524,40 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             val succeed = bleConnectorInstance.disconnect()
             warnOut("断开设备：succeed $succeed")
         } else {
-            val scanResult = scanResult ?: return
-            val succeed = bleConnectorInstance.connect(scanResult.device)
-            if (succeed) {
-                showConnecting()
-                binding.circlePointView.setColor(Color.YELLOW)
-            }
+            connectDevice()
+        }
+    }
+
+    /**
+     * 连接设备
+     */
+    private fun connectDevice() {
+        val scanResult = scanResult ?: return
+        val succeed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            bleConnectorInstance.connect(
+                scanResult.device,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT,
+                singleConnectActivityViewModel.bleConnectTransport.value
+                    ?: DEFAULT_BLE_CONNECT_TRANSPORT,
+                singleConnectActivityViewModel.bleConnectPhyMask.value
+                    ?: DEFAULT_BLE_CONNECT_PHY_MASK
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bleConnectorInstance.connect(
+                scanResult.device,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT,
+                singleConnectActivityViewModel.bleConnectTransport.value
+                    ?: DEFAULT_BLE_CONNECT_TRANSPORT
+            )
+        } else {
+            bleConnectorInstance.connect(
+                scanResult.device,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT
+            )
+        }
+        if (succeed) {
+            showConnecting()
+            binding.circlePointView.setColor(Color.YELLOW)
         }
     }
 
@@ -379,18 +583,54 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
                 for (j in characteristics.indices) {
                     val bluetoothGattCharacteristic = characteristics[j]
                     val characteristicUuidString = bluetoothGattCharacteristic.uuid.toString()
-                    val canRead: Boolean =
-                        bleConnectorInstance.canRead(serviceUuidString, characteristicUuidString)
-                    val canWrite: Boolean =
-                        bleConnectorInstance.canWrite(serviceUuidString, characteristicUuidString)
-                    val canNotify: Boolean =
-                        bleConnectorInstance.canNotify(serviceUuidString, characteristicUuidString)
+                    val characteristicCanRead: Boolean =
+                        bleConnectorInstance.checkCharacteristicProperties(
+                            serviceUuidString,
+                            characteristicUuidString,
+                            BluetoothGattCharacteristic.PROPERTY_READ
+                        )
+                    val characteristicCanWrite: Boolean =
+                        bleConnectorInstance.checkCharacteristicProperties(
+                            serviceUuidString,
+                            characteristicUuidString,
+                            BluetoothGattCharacteristic.PROPERTY_WRITE
+                        )
+                    val characteristicCanNotify: Boolean =
+                        bleConnectorInstance.checkCharacteristicProperties(
+                            serviceUuidString,
+                            characteristicUuidString,
+                            BluetoothGattCharacteristic.PROPERTY_NOTIFY
+                        )
+                    val descriptors = bluetoothGattCharacteristic.descriptors
+                    val descriptorUuidItems: MutableList<BaseNode> = ArrayList()
+                    for (k in descriptors.indices) {
+                        val bluetoothGattDescriptor = descriptors[k]
+                        val uuid = bluetoothGattDescriptor.uuid
+                        val descriptorCanRead =
+                            (bleConnectorInstance.checkDescriptorPermission(
+                                bluetoothGattDescriptor,
+                                BluetoothGattDescriptor.PERMISSION_READ
+                            ))
+                        val descriptorCanWrite =
+                            bleConnectorInstance.checkDescriptorPermission(
+                                bluetoothGattDescriptor,
+                                BluetoothGattDescriptor.PERMISSION_WRITE
+                            )
+                        descriptorUuidItems.add(
+                            DescriptorUuidItem(
+                                uuid.toString(),
+                                descriptorCanRead,
+                                descriptorCanWrite
+                            )
+                        )
+                    }
                     val characteristicUuidItem = CharacteristicUuidItem(
                         BleUtils.getCharacteristicsUuidName(characteristicUuidString),
                         characteristicUuidString,
-                        canRead,
-                        canWrite,
-                        canNotify
+                        characteristicCanRead,
+                        characteristicCanWrite,
+                        characteristicCanNotify,
+                        descriptorUuidItems
                     )
                     characteristicUuidItems.add(characteristicUuidItem)
                 }
@@ -415,29 +655,27 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     }
 
     /**
-     * 显示操作方式的对话框
+     * 显示特征的操作方式的对话框
      *
-     * @param serviceUuidString        服务UUID
-     * @param characteristicUuidString 特征UUID
+     * @param characteristicUuidItem 特征UUID
      */
-    private fun showOptionsDialog(serviceUuidString: String, characteristicUuidString: String) {
+    private fun showCharacteristicOptionsDialog(
+        characteristicUuidItem: CharacteristicUuidItem
+    ) {
+        val serviceUuid = serviceUuid ?: return
         AlertDialog.Builder(this)
             .setTitle(R.string.please_select_operate_dialog_title)
-            .setItems(R.array.options) { _, which ->
+            .setItems(R.array.characteristic_options) { _, which ->
                 when (which) {
                     //读数据
                     0 -> {
-                        if (!bleConnectorInstance.canRead(
-                                serviceUuidString,
-                                characteristicUuidString
-                            )
-                        ) {
+                        if (!characteristicUuidItem.canRead) {
                             toastL(R.string.characteristic_can_not_read)
                             return@setItems
                         }
-                        if (!bleConnectorInstance.readData(
-                                serviceUuidString,
-                                characteristicUuidString
+                        if (!bleConnectorInstance.readCharacteristicData(
+                                serviceUuid,
+                                characteristicUuidItem.uuid
                             )
                         ) {
                             toastL(R.string.characteristic_read_failed)
@@ -446,29 +684,21 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
                     }
                     //写数据
                     1 -> {
-                        if (!bleConnectorInstance.canWrite(
-                                serviceUuidString,
-                                characteristicUuidString
-                            )
-                        ) {
+                        if (!characteristicUuidItem.canWrite) {
                             toastL(R.string.characteristic_can_not_write)
                             return@setItems
                         }
-                        showWriteDataDialog(serviceUuidString, characteristicUuidString)
+                        showWriteCharacteristicDataDialog(serviceUuid, characteristicUuidItem.uuid)
                     }
                     //开启通知
                     2 -> {
-                        if (!bleConnectorInstance.canNotify(
-                                serviceUuidString,
-                                characteristicUuidString
-                            )
-                        ) {
+                        if (!characteristicUuidItem.canNotify) {
                             toastL(R.string.characteristic_can_not_notify)
                             return@setItems
                         }
                         if (!bleConnectorInstance.enableNotification(
-                                serviceUuidString,
-                                characteristicUuidString,
+                                serviceUuid,
+                                characteristicUuidItem.uuid,
                                 true
                             )
                         ) {
@@ -484,10 +714,49 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     }
 
     /**
+     * 显示描述
+     */
+    private fun showDescriptorOptionsDialog(descriptorUuidItem: DescriptorUuidItem) {
+        val serviceUuid = serviceUuid ?: return
+        val characteristicUuid = characteristicUuid ?: return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.please_select_operate_dialog_title)
+            .setItems(R.array.descriptor_options) { _, which ->
+                when (which) {
+                    //读数据
+                    0 -> {
+                        if (!descriptorUuidItem.canRead) {
+                            toastL(R.string.descriptor_can_not_read)
+                            return@setItems
+                        }
+                        val succeed = bleConnectorInstance.readDescriptorData(
+                            serviceUuid,
+                            characteristicUuid,
+                            descriptorUuidItem.uuid
+                        )
+                        if (!succeed) {
+                            toastL(R.string.descriptor_read_failed)
+                        }
+                    }
+                    //写数据
+                    1 -> {
+                        if (!descriptorUuidItem.canWrite) {
+                            toastL(R.string.descriptor_can_not_write)
+                            return@setItems
+                        }
+                        showWriteDescriptorDataDialog(descriptorUuidItem)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
      * 展示读取到的数据的对话框
      */
     private fun showReadDataResultDialog(
-        characteristic: BluetoothGattCharacteristic,
+        uuidString: String,
         value: ByteArray
     ) {
         val stringValue = String(value)
@@ -495,7 +764,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         AlertDialog.Builder(this)
             .setTitle(R.string.read_data_result_dialog_title)
             .setMessage(
-                "数据来源：${characteristic.uuid}\n十六进制：$hexValue\n字符串：$stringValue"
+                "数据来源：$uuidString\n十六进制：$hexValue\n字符串：$stringValue"
             )
             .setPositiveButton(R.string.copy_string_content) { _, _ ->
                 Tool.setDataToClipboard(this@SingleConnectActivity, TAG, stringValue)
@@ -513,7 +782,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      * 显示写入数据结果回调的对话框
      */
     private fun showWriteDataResultDialog(
-        characteristic: BluetoothGattCharacteristic,
+        uuidString: String,
         value: ByteArray
     ) {
         val stringValue = String(value)
@@ -521,9 +790,29 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         AlertDialog.Builder(this)
             .setTitle(R.string.write_data_result_dialog_title)
             .setMessage(
-                "数据来源：${characteristic.uuid}\n十六进制：$hexValue\n字符串：$stringValue"
+                "数据来源：$uuidString\n十六进制：$hexValue\n字符串：$stringValue"
             )
             .setPositiveButton(R.string.confirm, null)
+            .show()
+    }
+
+    /**
+     * 显示设置超时时间的对话框
+     */
+    private fun showSetConnectTimeoutDialog() {
+        val view = View.inflate(this, R.layout.view_ble_connect_timeout, null)
+        val editText = view.findViewById<EditText>(R.id.connect_timeout_et)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.set_ble_connect_timeout_dialog_title)
+            .setView(view)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                var text = editText.text.toString()
+                if (text.isEmpty()) {
+                    text = "0"
+                }
+                bleConnectorInstance.setConnectTimeout(text.toLong())
+            }
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -548,7 +837,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     /**
      * 显示写入数据的对话框
      */
-    private fun showWriteDataDialog(serviceUuid: String, characteristicUuid: String) {
+    private fun showWriteCharacteristicDataDialog(serviceUuid: String, characteristicUuid: String) {
         WriteDataDialog(this, object : WriteDataDialog.OnConfirmButtonClickedListener {
             /**
              * 字符串数据
@@ -559,7 +848,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
                     warnOut("字符串数据：$string 格式错误")
                     return
                 }
-                val succeed = bleConnectorInstance.writeData(
+                val succeed = bleConnectorInstance.writeCharacteristicData(
                     serviceUuid,
                     characteristicUuid,
                     byteArray
@@ -574,30 +863,162 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
              */
             override fun hexData(byteArray: ByteArray) {
                 warnOut("写入十六进制数据：${byteArray.toHexStringWithSpace()}")
+                val succeed = bleConnectorInstance.writeCharacteristicData(
+                    serviceUuid,
+                    characteristicUuid,
+                    byteArray
+                )
+                if (!succeed) {
+                    toastL(R.string.characteristic_write_failed)
+                }
             }
 
         }).show()
     }
 
     /**
-     * 保存到文件
+     * 显示写入描述数据的对话框
      */
-    @Synchronized
-    private fun saveToLog(uuidString: String, value: ByteArray) {
-        val file = File(FileUtil.sdCardCacheDir, "$uuidString.txt")
-        warnOut("收到通知数据：uuidString = $uuidString + data = ${value.toHexStringWithSpace()}")
-        if (file.exists()) {
-            if (file.isDirectory) {
-                file.delete()
-                file.createNewFile()
+    private fun showWriteDescriptorDataDialog(descriptorUuidItem: DescriptorUuidItem) {
+        val serviceUuid = serviceUuid ?: return
+        val characteristicUuid = characteristicUuid ?: return
+        WriteDataDialog(this, object : WriteDataDialog.OnConfirmButtonClickedListener {
+            /**
+             * 字符串数据
+             */
+            override fun stringData(string: String) {
+                val byteArray = string.getByteArray(20)
+                if (byteArray == null) {
+                    warnOut("字符串数据：$string 格式错误")
+                    return
+                }
+                val succeed = bleConnectorInstance.writeDescriptorData(
+                    serviceUuid,
+                    characteristicUuid,
+                    descriptorUuidItem.uuid,
+                    byteArray
+                )
+                if (!succeed) {
+                    toastL(R.string.descriptor_write_failed)
+                }
             }
-        } else {
-            file.createNewFile()
+
+            /**
+             * 十六进制数据
+             */
+            override fun hexData(byteArray: ByteArray) {
+                warnOut("写入十六进制数据：${byteArray.toHexStringWithSpace()}")
+                val succeed = bleConnectorInstance.writeDescriptorData(
+                    serviceUuid,
+                    characteristicUuid,
+                    descriptorUuidItem.uuid,
+                    byteArray
+                )
+                if (!succeed) {
+                    toastL(R.string.descriptor_write_failed)
+                }
+            }
+
+        }).show()
+    }
+
+    /**
+     * 显示设置连接参数的对话框
+     */
+    private fun showSetAutoReconnectDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.auto_reconnect_dialog_title)
+            .setItems(R.array.booleans) { _, which ->
+                when (which) {
+                    //是
+                    0 -> {
+                        singleConnectActivityViewModel.autoReconnect.value = true
+                    }
+                    //否
+                    1 -> {
+                        singleConnectActivityViewModel.autoReconnect.value = false
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示设置GATT传输层的对话框
+     */
+    private fun showSetBleConnectTransportDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            toastL(R.string.ble_connect_transport_not_support_with_low_system_version)
+            return
         }
-        val writer = FileWriter(file, true)
-        writer.append(value.toHexStringWithSpace())
-            .append("\n")
-            .flush()
-        writer.close()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.ble_reconnect_transport_dialog_title)
+            .setItems(R.array.ble_reconnect_transport) { _, which ->
+                when (which) {
+                    //transport_auto
+                    0 -> {
+                        singleConnectActivityViewModel.bleConnectTransport.value =
+                            BleConnectTransport.TRANSPORT_AUTO
+                        singleConnectActivityViewModel.bleConnectTransportName.value =
+                            getString(R.string.transport_auto)
+                    }
+                    //transport_br_edr
+                    1 -> {
+                        singleConnectActivityViewModel.bleConnectTransport.value =
+                            BleConnectTransport.TRANSPORT_BR_EDR
+                        singleConnectActivityViewModel.bleConnectTransportName.value =
+                            getString(R.string.transport_br_edr)
+                    }
+                    //transport_le
+                    2 -> {
+                        singleConnectActivityViewModel.bleConnectTransport.value =
+                            BleConnectTransport.TRANSPORT_LE
+                        singleConnectActivityViewModel.bleConnectTransportName.value =
+                            getString(R.string.transport_le)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示设置BLE管理层的对话框
+     */
+    private fun showSetBleConnectPhyMaskDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            toastL(R.string.ble_connect_phy_mask_not_support_with_low_system_version)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.ble_connect_phy_mask_dialog_title)
+            .setItems(R.array.ble_connect_phy_mask) { _, which ->
+                when (which) {
+                    //phy_le_1m_mask
+                    0 -> {
+                        singleConnectActivityViewModel.bleConnectPhyMask.value =
+                            BleConnectPhyMask.PHY_LE_1M_MASK
+                        singleConnectActivityViewModel.bleConnectPhyMaskName.value =
+                            getString(R.string.connect_phy_le_1m_mask)
+                    }
+                    //phy_le_2m_mask
+                    1 -> {
+                        singleConnectActivityViewModel.bleConnectPhyMask.value =
+                            BleConnectPhyMask.PHY_LE_2M_MASK
+                        singleConnectActivityViewModel.bleConnectPhyMaskName.value =
+                            getString(R.string.connect_phy_le_2m_mask)
+                    }
+                    //phy_le_coded_mask
+                    2 -> {
+                        singleConnectActivityViewModel.bleConnectPhyMask.value =
+                            BleConnectPhyMask.PHY_LE_CODED_MASK
+                        singleConnectActivityViewModel.bleConnectPhyMaskName.value =
+                            getString(R.string.connect_phy_le_coded_mask)
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 }

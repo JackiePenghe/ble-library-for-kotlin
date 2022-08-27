@@ -471,7 +471,13 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             .setTitle(R.string.set_ble_scan_phy_dialog_title)
             .setItems(R.array.ble_scan_phy) { _, which ->
                 val bleScanPhy = BleScanPhy.values()[which]
-                bleScanner.setScanPhy(bleScanPhy)
+                if (bleScanPhy == BleScanPhy.PHY_LE_CODED){
+                    if (!BleManager.isLeCodedPhySupported()){
+                        toastL(R.string.phy_le_coded_mask_not_support)
+                        return@setItems
+                    }
+                }
+                bleScanner.setBleScanPhy(bleScanPhy)
                 warnOut("bleScanPhy $bleScanPhy")
             }
             .setNegativeButton(R.string.cancel, null)
@@ -581,7 +587,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
         }
         AlertDialog.Builder(this)
             .setTitle(R.string.device_options_dialog_title)
-            .setItems(R.array.device_options) { _, which ->
+            .setItems(R.array.scanned_device_options) { _, which ->
                 when (which) {
                     //连接设备
                     0 -> {

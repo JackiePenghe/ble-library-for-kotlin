@@ -14,6 +14,7 @@
         tools:ignore="ContentDescription" />
 
     <include
+        android:layout_marginStart="10dp"
         layout="@android:layout/simple_list_item_2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

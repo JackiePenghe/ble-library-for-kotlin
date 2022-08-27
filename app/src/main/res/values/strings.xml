@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BleLibraryForKotlin</string>
+    <string name="app_name">BLE通用工具</string>
 
     <!--  扫描模式  -->
     <string name="ble_mode_balanced">平衡模式</string>
@@ -22,7 +22,7 @@
     <string name="stop_scan">停止扫描</string>
     <string name="start_scan_failed">扫描失败</string>
     <string name="stop_scan_failed">停止失败</string>
-    <string name="connect_single_device">连接单个设备</string>
+    <string name="scan_and_connect">扫描与连接</string>
     <string name="device_scan_title">设备扫描</string>
     <string name="NA">N/A</string>
     <string name="menu_set_ble_scan_mode">设置扫描模式</string>
@@ -47,7 +47,7 @@
     <string name="set_ble_scan_timeout_dialog_title">设置扫描时长</string>
     <string name="data_invalid">数据无效</string>
     <string name="data_empty">空数据</string>
-    <string name="scan_timeout_hint">输入负数可一直扫描，直到手动停止</string>
+    <string name="scan_timeout_hint">输入任意负数可一直扫描，直到手动停止</string>
     <string name="menu_name_filter">名称过滤</string>
     <string name="name_filter_dialog_title">名称过滤</string>
     <string name="set_starts_name_filter">设置名称过滤-开头匹配</string>
@@ -90,7 +90,7 @@
     <string name="indicator_light_hint_title">状态指示颜色说明</string>
     <string name="indicator_light_hint_content">红色-断开连接或未执行连接\n黄色-正在连接\n蓝色-已连接到设备\n绿色-服务发现成功(真正完成连接)\n品红-出现异常</string>
     <string name="characteristic_hint_title">特征属性说明</string>
-    <string name="characteristic_hint_content">R 可读\nW 可写\nN 支持通知</string>
+    <string name="characteristic_hint_content">R:可读 W:可写 N:支持通知</string>
     <string name="please_select_operate_dialog_title">请选择操作</string>
     <string name="read_data">读取数据</string>
     <string name="write_data">写入数据</string>
@@ -134,4 +134,41 @@
     <string name="data_colon">数据：</string>
     <string name="ad_flag_colon">广播标志：</string>
     <string name="tx_power_colon">Tx_power：</string>
+    <string name="menu_auto_reconnect">自动重连</string>
+    <string name="auto_reconnect_dialog_title">自动重连</string>
+    <string name="menu_ble_connect_transport">GATT传输层</string>
+    <string name="ble_reconnect_transport_dialog_title">GATT传输层</string>
+    <string name="ble_connect_transport_not_support_with_low_system_version">设置GATT传输层需要安卓6.0</string>
+    <string name="menu_ble_connect_phy_mask">BLE物理层</string>
+    <string name="ble_connect_phy_mask_not_support_with_low_system_version">BLE物理层选择需要安卓8.0</string>
+    <string name="ble_connect_phy_mask_dialog_title">BLE物理层</string>
+    <string name="scan_list_hit">长按搜索到的设备列表显示更多操作\n右上角可设置更多搜索参数\n点击底部按钮开始/停止扫描</string>
+    <string name="phy_le_coded_mask_not_support">此设备不支持LE CODED</string>
+    <string name="ad_struct_options_dialog_title">AD结构操作选项</string>
+    <string name="copy_all_ad_struct_data">复制整个AD结构</string>
+    <string name="copy_ad_data_only">仅复制数据部分</string>
+    <string name="ad_struct_copied">AD结构已复制</string>
+    <string name="ad_data_copied">AD数据已复制</string>
+    <string name="service_data_options_dialog_title">服务数据操作选项</string>
+    <string name="copy_service_uuid">复制服务UUID</string>
+    <string name="copy_service_data">复制服务数据</string>
+    <string name="service_uuid_copied">服务UUID已复制</string>
+    <string name="service_data_copied">服务数据已复制</string>
+    <string name="auto_reconnect_colon">自动重连:</string>
+    <string name="ble_connect_transport_colon">GATT传输层:</string>
+    <string name="ble_connect_phy_mask_colon">GATT物理层:</string>
+    <string name="no_descriptor">此特征下没有可用的描述</string>
+    <string name="discover_services_failed">发现服务失败</string>
+    <string name="connect_state_err">连接状态错误%1$d</string>
+    <string name="connected">已连接</string>
+    <string name="connect_timeout">连接超时</string>
+    <string name="descriptor_read_failed">描述读取失败</string>
+    <string name="descriptor_can_not_read">此描述不可读</string>
+    <string name="descriptor_write_failed">描述写入失败</string>
+    <string name="descriptor_can_not_write">此描述不可写</string>
+    <string name="characteristic_option_hint_content">如果特征下有描述信息,可长按特征进行操作</string>
+    <string name="menu_ble_connect_timeout">连接超时设置</string>
+    <string name="set_ble_connect_timeout_dialog_title">连接超时设置</string>
+    <string name="connect_timeout_colon">超时时间(ms):</string>
+    <string name="please_type_connect_timeout">请输入超时时间</string>
 </resources>

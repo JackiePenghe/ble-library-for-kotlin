@@ -20,4 +20,11 @@
         <item>@string/callback_type_first_match</item>
         <item>@string/callback_type_match_lost</item>
     </string-array>
+
+    <!--  蓝牙连接-GATT传输层  -->
+    <string-array name="ble_reconnect_transport">
+        <item>@string/transport_auto</item>
+        <item>@string/transport_br_edr</item>
+        <item>@string/transport_le</item>
+    </string-array>
 </resources>

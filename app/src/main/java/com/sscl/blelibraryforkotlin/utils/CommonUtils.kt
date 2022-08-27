@@ -25,8 +25,15 @@ fun <T : Activity> Activity.startActivity(clazz: Class<T>) {
     this.startActivity(Intent(this, clazz))
 }
 
-fun Any.warnOut(msg: String) {
-    DebugUtil.warnOut(this.javaClass.simpleName, msg)
+fun Any.warnOut(msg: String?) {
+    if (msg == null) {
+        DebugUtil.warnOut(this.javaClass.simpleName, "null")
+    } else {
+        DebugUtil.warnOut(
+            this.javaClass.simpleName,
+            msg
+        )
+    }
 }
 
 fun Any.errorOut(msg: String) {

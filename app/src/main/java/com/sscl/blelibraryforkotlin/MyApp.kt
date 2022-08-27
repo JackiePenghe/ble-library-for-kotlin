@@ -5,6 +5,7 @@ import com.sscl.baselibrary.files.FileUtil
 import com.sscl.baselibrary.utils.CrashHandler
 import com.sscl.baselibrary.utils.DebugUtil
 import com.sscl.baselibrary.utils.LogCatHelper
+import com.sscl.baselibrary.utils.ToastUtil
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.Logger
 
@@ -34,6 +35,7 @@ class MyApp : Application() {
         instance = this
         DebugUtil.setDebugFlag(true)
         FileUtil.init(this)
+        ToastUtil.isToastReuse = true
         BleManager.initialize(this)
         Logger.enableLog(true)
     }

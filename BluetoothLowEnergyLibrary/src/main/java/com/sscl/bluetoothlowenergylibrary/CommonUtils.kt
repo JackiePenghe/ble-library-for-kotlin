@@ -95,7 +95,7 @@ internal fun Any.hasBluetoothConnectPermission(): Boolean {
  * 字节数组转十六进制字符串
  */
 internal fun ByteArray?.toHexString(): String {
-    this?:return ""
+    this ?: return ""
     var stmp: String
     val sb = StringBuilder()
     for (aByte in this) {
@@ -160,4 +160,18 @@ fun Int.getFailMsg(): String {
             "未知的错误 $this,请查看 android.bluetooth.le.ScanCallback 源码获取对应的错误信息"
         }
     }
+}
+
+/**
+ * 将AD结构数据转换为字节数组
+ */
+fun AdvertiseStruct?.toByteArray(): ByteArray? {
+    this ?: return null
+    val byteArray = ByteArray(length + 1)
+    byteArray[0] = length.toByte()
+    byteArray[1] = type
+    for (i in 2 until byteArray.size) {
+        byteArray[i] = data[i - 2]
+    }
+    return byteArray
 }

@@ -7,8 +7,10 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBluetoothStateChangedListener
 import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
@@ -156,8 +158,8 @@ object BleManager {
 
     /**
      * 请求开启蓝牙开关
-     *
-     * @return true means request success
+     * 蓝牙开关状态变化的监听需要添加回调[com.sscl.bluetoothlowenergylibrary.BleManager.addOnBluetoothStateChangedListener]
+     * @return true表示请求成功发送
      */
     @SuppressLint("MissingPermission")
     fun enableBluetooth(enable: Boolean): Boolean {
@@ -177,16 +179,25 @@ object BleManager {
     }
 
     /**
+     * 判断设备是否LE CODED
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun isLeCodedPhySupported(): Boolean {
+        return bluetoothAdapter?.isLeCodedPhySupported ?: false
+    }
+
+    /**
      * 添加蓝牙状态变化回调监听
      *
      * @param onBluetoothStateChangedListener 蓝牙状态变化回调监听
      */
+    @Suppress("MemberVisibilityCanBePrivate")
     fun addOnBluetoothStateChangedListener(onBluetoothStateChangedListener: OnBluetoothStateChangedListener) {
         onBluetoothStateChangedListeners.add(onBluetoothStateChangedListener)
     }
 
     /**
-     * 移除蓝牙状态变化回调监听
+     * 移除某个蓝牙状态变化回调监听
      *
      * @param onBluetoothStateChangedListener 蓝牙状态变化回调监听
      */
@@ -195,9 +206,9 @@ object BleManager {
     }
 
     /**
-     * 清空蓝牙状态变化回调监听
+     * 移除全部蓝牙状态变化回调监听
      */
-    fun removeAllOnBluetoothStateChangedListener() {
+    fun removeOnBluetoothStateChangedListeners() {
         onBluetoothStateChangedListeners.clear()
     }
 
@@ -219,7 +230,7 @@ object BleManager {
     @Synchronized
     fun getBleConnectorInstance(): BleSingleConnector {
         checkInitialState()
-        if (bleSingleConnector == null){
+        if (bleSingleConnector == null) {
             bleSingleConnector = BleSingleConnector()
         }
         return bleSingleConnector!!

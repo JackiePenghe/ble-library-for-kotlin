@@ -3,28 +3,39 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="viewModel"
             type="com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel" />
     </data>
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
         tools:context=".ui.activities.scan.DeviceScanActivity">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@drawable/solid_999999_radius_10"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/scan_list_hit" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/device_list_rv"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
         <Button
-            android:text="@={viewModel.searchBtnText}"
             android:id="@+id/search_btn"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="@={viewModel.searchBtnText}" />
 
     </LinearLayout>
 </layout>

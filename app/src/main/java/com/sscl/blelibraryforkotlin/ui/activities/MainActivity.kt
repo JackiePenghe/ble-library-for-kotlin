@@ -40,7 +40,7 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      */
     private val onClickListener = View.OnClickListener {
         when (it.id) {
-            binding.connectSingleDeviceBtn.id -> {
+            binding.scanAndConnectBtn.id -> {
                 toDeviceScanActivity()
             }
         }
@@ -85,7 +85,7 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      * 初始化事件
      */
     override fun initEvents() {
-        binding.connectSingleDeviceBtn.setOnClickListener(onClickListener)
+        binding.scanAndConnectBtn.setOnClickListener(onClickListener)
     }
 
     /**

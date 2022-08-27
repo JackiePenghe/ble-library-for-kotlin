@@ -5,9 +5,9 @@ import com.chad.library.adapter.base.provider.BaseNodeProvider
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.ui.adapters.ServicesCharacteristicsListAdapter
-import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.CharacteristicUuidItem
+import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.DescriptorUuidItem
 
-class CharacteristicUuidProvider : BaseNodeProvider() {
+class DescriptorUuidProvider : BaseNodeProvider() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -16,26 +16,19 @@ class CharacteristicUuidProvider : BaseNodeProvider() {
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
     override val itemViewType: Int
-        get() = ServicesCharacteristicsListAdapter.TYPE_CHARACTERISTIC_UUID
+        get() = ServicesCharacteristicsListAdapter.TYPE_DESCRIPTOR_UUID
     override val layoutId: Int
-        get() = R.layout.item_expandable_characteristic_uuid
+        get() = R.layout.item_expandable_descriptor_uuid
 
     override fun convert(helper: BaseViewHolder, item: BaseNode) {
-        val characteristicUuidItem = item as CharacteristicUuidItem
-        helper.setText(android.R.id.text1, characteristicUuidItem.name)
-            .setText(android.R.id.text2, characteristicUuidItem.uuid)
+        val descriptorUuidItem = item as DescriptorUuidItem
+        helper.setText(android.R.id.text1, descriptorUuidItem.uuid)
             .setText(
                 R.id.properties,
                 getProperties(
-                    characteristicUuidItem.canRead,
-                    characteristicUuidItem.canWrite,
-                    characteristicUuidItem.canNotify
+                    descriptorUuidItem.canRead,
+                    descriptorUuidItem.canWrite
                 )
-            )
-            .setGone(R.id.expanded, characteristicUuidItem.childNode.isEmpty())
-            .setImageResource(
-                R.id.expanded,
-                if (characteristicUuidItem.isExpanded) R.drawable.arrow_b else R.drawable.arrow_r
             )
     }
 
@@ -50,12 +43,11 @@ class CharacteristicUuidProvider : BaseNodeProvider() {
      *
      * @param canRead   是否可读
      * @param canWrite  是否可写
-     * @param canNotify 是否可通知
      * @return 特征属性
      */
-    private fun getProperties(canRead: Boolean, canWrite: Boolean, canNotify: Boolean): String {
+    private fun getProperties(canRead: Boolean, canWrite: Boolean): String {
         val mContext = context
-        if (!canRead && !canWrite && !canNotify) {
+        if (!canRead && !canWrite) {
             return mContext.getString(R.string.null_)
         }
         val stringBuilder = StringBuilder()
@@ -64,9 +56,6 @@ class CharacteristicUuidProvider : BaseNodeProvider() {
         }
         if (canWrite) {
             stringBuilder.append(mContext.getString(R.string.can_write))
-        }
-        if (canNotify) {
-            stringBuilder.append(mContext.getString(R.string.can_notify))
         }
         return stringBuilder.toString()
     }

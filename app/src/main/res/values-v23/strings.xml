@@ -15,4 +15,9 @@
     <string name="callback_type_all_matches">全部匹配</string>
     <string name="callback_type_first_match">首次匹配</string>
     <string name="callback_type_match_lost">丢失模式</string>
+
+    <!--  传输层  -->
+    <string name="transport_auto">自动</string>
+    <string name="transport_br_edr">首选 BR/EDR</string>
+    <string name="transport_le">首选 LE</string>
 </resources>
