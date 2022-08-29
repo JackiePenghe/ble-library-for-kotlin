@@ -4,11 +4,15 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.checkBleSupport
 import com.sscl.bluetoothlowenergylibrary.checkBluetoothSupport
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectPhyMask
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhy
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhyOptions
 import com.sscl.bluetoothlowenergylibrary.intefaces.*
 import java.util.*
 import java.util.concurrent.ScheduledExecutorService
@@ -94,6 +98,31 @@ class BleSingleConnector internal constructor() {
      * 描述写入回调
      */
     internal var onDescriptorWriteDataListener: OnDescriptorWriteDataListener? = null
+
+    /**
+     * 可靠数据写入成功回调
+     */
+    internal var onReliableWriteCompletedListener: OnReliableWriteCompletedListener? = null
+
+    /**
+     * 获取设备RSSI回调
+     */
+    internal var onReadRemoteRssiListener: OnReadRemoteRssiListener? = null
+
+    /**
+     * MTU变化回调
+     */
+    internal var onMtuChangedListener: OnMtuChangedListener? = null
+
+    /**
+     * 物理层读取回调
+     */
+    internal var onPhyReadListener: OnPhyReadListener? = null
+
+    /**
+     * 物理层变更的回调
+     */
+    internal var onPhyUpdateListener: OnPhyUpdateListener? = null
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -224,6 +253,23 @@ class BleSingleConnector internal constructor() {
     }
 
     /**
+     * 设置MTU变化的回调
+     * @param onMtuChangedListener MTU变化的回调
+     */
+    fun setOnMtuChangedListener(onMtuChangedListener: OnMtuChangedListener?) {
+        this.onMtuChangedListener = onMtuChangedListener
+    }
+
+    /**
+     * 设置物理层读取回调
+     * @param onPhyReadListener 物理层读取回调
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setOnPhyReadListener(onPhyReadListener: OnPhyReadListener?) {
+        this.onPhyReadListener = onPhyReadListener
+    }
+
+    /**
      * 设置特征数据读取回调
      * @param onCharacteristicWriteDataListener 特征数据写入回调
      */
@@ -248,11 +294,36 @@ class BleSingleConnector internal constructor() {
     }
 
     /**
-     * 设置描述读取回调
+     * 设置描述写入回调
      * @param onDescriptorWriteDataListener 描述写入回调
      */
     fun setOnDescriptorWriteDataListener(onDescriptorWriteDataListener: OnDescriptorWriteDataListener?) {
         this.onDescriptorWriteDataListener = onDescriptorWriteDataListener
+    }
+
+    /**
+     * 设置可靠数据写入回调
+     * @param onReliableWriteCompletedListener 可靠数据写入回调
+     */
+    fun setOnReliableWriteCompletedListener(onReliableWriteCompletedListener: OnReliableWriteCompletedListener?) {
+        this.onReliableWriteCompletedListener = onReliableWriteCompletedListener
+    }
+
+    /**
+     * 设置设备RSSI读取回调
+     * @param onReadRemoteRssiListener 可靠数据写入回调
+     */
+    fun setOnReadRemoteRssiListener(onReadRemoteRssiListener: OnReadRemoteRssiListener?) {
+        this.onReadRemoteRssiListener = onReadRemoteRssiListener
+    }
+
+    /**
+     * 设置设备物理层变更的回调
+     * @param onPhyUpdateListener 设备物理层变更的回调
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setOnPhyUpdateListener(onPhyUpdateListener: OnPhyUpdateListener?) {
+        this.onPhyUpdateListener = onPhyUpdateListener
     }
 
     /**
@@ -408,7 +479,7 @@ class BleSingleConnector internal constructor() {
 
     /**
      * 取消本次可靠写入模式下写入的数据
-     * @return 是否请求成功
+     * @return 是否取消成功
      */
     fun abortReliableWrite(): Boolean {
         return BleManager.singleConnectService?.abortReliableWrite() ?: false
@@ -416,6 +487,7 @@ class BleSingleConnector internal constructor() {
 
     /**
      * 将可靠模式下写入的数据应用到设备中
+     * 将会触发回调-onReliableWriteCompleted
      * @return 是否请求成功
      */
     fun executeReliableWrite(): Boolean {
@@ -566,6 +638,37 @@ class BleSingleConnector internal constructor() {
     fun writeDescriptorData(descriptor: BluetoothGattDescriptor, value: ByteArray): Boolean {
         return BleManager.singleConnectService?.writeDescriptorData(descriptor, value)
             ?: return false
+    }
+
+    /**
+     * 读取设备RSSI
+     */
+    fun readRemoteRssi(): Boolean {
+        return BleManager.singleConnectService?.readRemoteRssi() ?: false
+    }
+
+    /**
+     * 请求MTU
+     * @param mtu MTU值
+     */
+    fun requestMtu(mtu: Int): Boolean {
+        return BleManager.singleConnectService?.requestMtu(mtu) ?: false
+    }
+
+    /**
+     * 读取物理层
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun readPhy(): Boolean {
+        return BleManager.singleConnectService?.readPhy() ?: false
+    }
+
+    /**
+     * 设置物理层偏好
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setPreferredPhy(txPhy: BlePhy, rxPhy: BlePhy, phyOptions: BlePhyOptions): Boolean {
+        return BleManager.singleConnectService?.setPreferredPhy(txPhy, rxPhy, phyOptions) ?: false
     }
 
     /* * * * * * * * * * * * * * * * * * * 私有方法 * * * * * * * * * * * * * * * * * * */

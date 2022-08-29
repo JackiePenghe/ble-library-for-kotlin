@@ -1,13 +1,11 @@
 package com.sscl.blelibraryforkotlin.viewmodels
 
 import android.bluetooth.le.ScanResult
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectPhyMask
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
 
 class SingleConnectActivityViewModel : ViewModel() {
 

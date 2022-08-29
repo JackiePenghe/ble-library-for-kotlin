@@ -12,4 +12,11 @@
         <item>@string/connect_phy_le_2m_mask</item>
         <item>@string/connect_phy_le_coded_mask</item>
     </string-array>
+
+    <!--  BLE已连接的物理层  -->
+    <string-array name="ble_connect_phy">
+        <item>@string/phy_le_1m</item>
+        <item>@string/phy_le_2m</item>
+        <item>@string/phy_le_coded</item>
+    </string-array>
 </resources>

@@ -6,11 +6,14 @@ import android.bluetooth.*
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.Logger
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleBluetoothGattCallback
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhy
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectPhyMask
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhyOptions
 import com.sscl.bluetoothlowenergylibrary.hasBluetoothConnectPermission
 import com.sscl.bluetoothlowenergylibrary.isValidBluetoothAddress
 import com.sscl.bluetoothlowenergylibrary.utils.BleConstants
@@ -212,46 +215,7 @@ class BluetoothLeSingleConnectService : Service() {
      */
     internal fun getService(uuid: UUID): BluetoothGattService? {
         val result = bluetoothGatt?.getService(uuid)
-        Logger.log(TAG, "getService by uuid $uuid result $result")
-        return result
-    }
-
-    /**
-     * 检查特征是否可读
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示可读
-     */
-    internal fun canRead(characteristic: BluetoothGattCharacteristic): Boolean {
-        val properties = characteristic.properties
-        val result = properties and BluetoothGattCharacteristic.PROPERTY_READ != 0
-        Logger.log(TAG, "检查特征是否可读 characteristic ${characteristic.uuid} result $result")
-        return result
-    }
-
-    /**
-     * 检查特征是否可写
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示可写
-     */
-    internal fun canWrite(characteristic: BluetoothGattCharacteristic): Boolean {
-        val properties = characteristic.properties
-        val result = properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0
-        Logger.log(TAG, "检查特征是否可写 characteristic ${characteristic.uuid} result $result")
-        return result
-    }
-
-    /**
-     * 检查特征是否支持通知
-     *
-     * @param characteristic BluetoothGattCharacteristic
-     * @return true表示支持通知
-     */
-    internal fun canNotify(characteristic: BluetoothGattCharacteristic): Boolean {
-        val properties = characteristic.properties
-        val result = properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0
-        Logger.log(TAG, "检查特征是否支持通知 characteristic ${characteristic.uuid} result $result ")
+        Logger.log(TAG, "getService by uuid $uuid result ${result?.uuid}")
         return result
     }
 
@@ -273,16 +237,20 @@ class BluetoothLeSingleConnectService : Service() {
     }
 
     /**
-     * 读取数据
+     * 读取特征数据
      * @param characteristic BluetoothGattCharacteristic
      * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
-    internal fun readData(characteristic: BluetoothGattCharacteristic): Boolean {
+    internal fun readCharacteristicData(characteristic: BluetoothGattCharacteristic): Boolean {
         val result = if (!hasBluetoothConnectPermission()) {
             false
         } else {
-            if (!canRead(characteristic)) {
+            if (!checkCharacteristicProperty(
+                    characteristic,
+                    BluetoothGattCharacteristic.PROPERTY_READ
+                )
+            ) {
                 false
             } else {
                 bluetoothGatt?.readCharacteristic(characteristic)
@@ -294,24 +262,31 @@ class BluetoothLeSingleConnectService : Service() {
     }
 
     /**
-     * 写入数据
+     * 写入特征数据
      * @param characteristic BluetoothGattCharacteristic
      * @param byteArray 数据
      * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
-    internal fun writeData(
+    internal fun writeCharacteristicData(
         characteristic: BluetoothGattCharacteristic,
         byteArray: ByteArray
     ): Boolean {
         val result = if (!hasBluetoothConnectPermission()) {
             false
         } else {
-            if (!canWrite(characteristic)) {
+            if (!checkCharacteristicProperty(
+                    characteristic,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE
+                )
+            ) {
                 false
             } else {
-                characteristic.value = byteArray
-                bluetoothGatt?.writeCharacteristic(characteristic) ?: false
+                if (!characteristic.setValue(byteArray)) {
+                    false
+                } else {
+                    bluetoothGatt?.writeCharacteristic(characteristic) ?: false
+                }
             }
         }
         Logger.log(TAG, "写入特征数据 result $result")
@@ -320,6 +295,9 @@ class BluetoothLeSingleConnectService : Service() {
 
     /**
      * 打开通知
+     * @param characteristic BluetoothGattCharacteristic
+     * @param enable 是否打开通知
+     * @return 是否执行成功
      */
     @SuppressLint("MissingPermission")
     internal fun enableNotification(
@@ -330,7 +308,11 @@ class BluetoothLeSingleConnectService : Service() {
         if (!hasBluetoothConnectPermission()) {
             result = false
         } else {
-            if (!canNotify(characteristic)) {
+            if (!checkCharacteristicProperty(
+                    characteristic,
+                    BluetoothGattCharacteristic.PROPERTY_NOTIFY
+                )
+            ) {
                 result = false
             } else {
                 val cacheResult =
@@ -352,6 +334,192 @@ class BluetoothLeSingleConnectService : Service() {
             }
         }
         Logger.log(TAG, "打开通知 result $result")
+        return result
+    }
+
+    /**
+     * 为给定的远程设备启动可靠的写入事务。
+     * 此方法并非全部BLE设备都支持,需要先确认设备是否处理了此方式的数据写入
+     * 一旦启动了可靠的写入事务，所有对 [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.writeCharacteristicData] 的调用都会发送到远程设备进行验证并排队等待执行。
+     * 应用程序将收到一个 [com.sscl.bluetoothlowenergylibrary.intefaces.OnCharacteristicWriteDataListener.onCharacteristicWriteData]回调
+     * 回调以响应每个  [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.writeCharacteristicData] 调用，并负责验证该值是否已准确传输。
+     * 在所有特征都排队并验证后，[com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.executeReliableWrite] 将执行所有写入。
+     * 如果未正确写入特征，则调用 [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.abortReliableWrite] 将取消当前事务，而不在远程设备上提交任何值。
+     * @return true，如果可靠的写事务已经启动
+     */
+    @SuppressLint("MissingPermission")
+    internal fun beginReliableWrite(): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            return false
+        } else {
+            bluetoothGatt?.beginReliableWrite() ?: false
+        }
+        Logger.log(TAG, "开启可靠传输事务 result $result")
+        return result
+    }
+
+    /**
+     * 取消本次可靠写入模式下写入的数据
+     * @return 是否取消成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun abortReliableWrite(): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            return false
+        } else {
+            bluetoothGatt?.abortReliableWrite()
+            bluetoothGatt != null
+        }
+        Logger.log(TAG, "取消可靠传输事务 result $result")
+        return result
+    }
+
+    /**
+     * 将可靠模式下写入的数据应用到设备中
+     * @return 是否请求成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun executeReliableWrite(): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.executeReliableWrite() ?: false
+        }
+        Logger.log(TAG, "应用可靠模式下写入的数据 result $result")
+        return result
+    }
+
+    /**
+     * 读取特征描述信息
+     * @param descriptor BluetoothGattDescriptor
+     * @return  是否成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun readDescriptorData(descriptor: BluetoothGattDescriptor): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.readDescriptor(descriptor) ?: false
+        }
+        Logger.log(TAG, "读取特征描述信息 result $result")
+        return result
+    }
+
+    /**
+     * 写入特征描述信息
+     * @param descriptor BluetoothGattDescriptor
+     * @param value 数据内容
+     * @return  是否成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun writeDescriptorData(
+        descriptor: BluetoothGattDescriptor,
+        value: ByteArray
+    ): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            if (!descriptor.setValue(value)) {
+                false
+            } else {
+                bluetoothGatt?.writeDescriptor(descriptor) ?: false
+            }
+        }
+        Logger.log(TAG, "读取特征描述信息 result $result")
+        return result
+    }
+
+    /**
+     * 判断某个描述是否有对应的权限
+     * @param descriptor BluetoothGattDescriptor
+     * @param permissions 要判断的权限
+     * @return 是否有权限
+     */
+    internal fun checkDescriptorPermission(
+        descriptor: BluetoothGattDescriptor,
+        permissions: Int
+    ): Boolean {
+        val result = descriptor.permissions and permissions == permissions
+        Logger.log(TAG, "检查描述是否有指定的权限 descriptor ${descriptor.uuid} result $result")
+        return result
+    }
+
+    /**
+     * 判断某个描述是否有对应的权限
+     * @param characteristic BluetoothGattCharacteristic
+     * @param properties BluetoothGattCharacteristic
+     * @return 是否有对应属性
+     */
+    internal fun checkCharacteristicProperty(
+        characteristic: BluetoothGattCharacteristic,
+        properties: Int
+    ): Boolean {
+        val result = characteristic.properties and properties == properties
+        Logger.log(TAG, "检查特征是否有指定的权限 characteristic ${characteristic.uuid} result $result")
+        return result
+    }
+
+    /**
+     *获取设备的RSSI
+     * @return 是否请求成功
+     */
+    @SuppressLint("MissingPermission")
+    internal fun readRemoteRssi(): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.readRemoteRssi() ?: false
+        }
+        Logger.log(TAG, "读取设备RSSI result $result")
+        return result
+    }
+
+    /**
+     * 请求更改MTU大小
+     * @param mtu MTU大小
+     */
+    @SuppressLint("MissingPermission")
+    internal fun requestMtu(mtu: Int): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.requestMtu(mtu) ?: false
+        }
+        Logger.log(TAG, "请求更改MTU大小 result $result")
+        return result
+    }
+
+    /**
+     * 读取物理层
+     * @return 是否请求成功
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("MissingPermission")
+    internal fun readPhy(): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.readPhy()
+            bluetoothGatt != null
+        }
+        Logger.log(TAG, "读取当前连接的物理层 result $result")
+        return result
+    }
+
+    /**
+     * 设置偏好物理层
+     *  @return 是否请求成功
+     */
+    @SuppressLint("MissingPermission")
+    @RequiresApi(Build.VERSION_CODES.O)
+    internal fun setPreferredPhy(txPhy: BlePhy, rxPhy: BlePhy, phyOptions: BlePhyOptions): Boolean {
+        val result = if (!hasBluetoothConnectPermission()) {
+            false
+        } else {
+            bluetoothGatt?.setPreferredPhy(txPhy.value, rxPhy.value, phyOptions.value)
+            bluetoothGatt != null
+        }
+        Logger.log(TAG, "设置偏好物理层 result $result")
         return result
     }
 }

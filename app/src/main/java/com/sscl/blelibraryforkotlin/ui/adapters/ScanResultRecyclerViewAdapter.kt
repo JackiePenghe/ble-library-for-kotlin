@@ -11,8 +11,8 @@ import com.sscl.blelibraryforkotlin.databinding.AdapterScanResultItemBinding
 /**
  * 扫描结果列表适配器
  */
-class ScanResultAdapter :
-    BaseQuickAdapter<ScanResult, ScanResultAdapter.ViewHolder>(R.layout.adapter_scan_result_item) {
+class ScanResultRecyclerViewAdapter :
+    BaseQuickAdapter<ScanResult, ScanResultRecyclerViewAdapter.ViewHolder>(R.layout.adapter_scan_result_item) {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *

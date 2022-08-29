@@ -7,7 +7,7 @@ import android.os.ParcelUuid
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.*
-import com.sscl.bluetoothlowenergylibrary.enums.scanner.*
+import com.sscl.bluetoothlowenergylibrary.enums.*
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
 import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
@@ -284,7 +284,7 @@ class BleScanner internal constructor() {
 
     /**
      * 设置扫描物理层
-     * 使用[com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanPhy.PHY_LE_CODED]
+     * 使用[com.sscl.bluetoothlowenergylibrary.enums.BleScanPhy.PHY_LE_CODED]
      * 请务必判断[com.sscl.bluetoothlowenergylibrary.BleManager.isLeCodedPhySupported]
      */
     @RequiresApi(api = Build.VERSION_CODES.O)

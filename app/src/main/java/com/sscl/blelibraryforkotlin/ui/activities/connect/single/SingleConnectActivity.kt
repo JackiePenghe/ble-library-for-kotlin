@@ -29,13 +29,16 @@ import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentit
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.DescriptorUuidItem
 import com.sscl.blelibraryforkotlin.ui.adapters.servicescharacteristicslistentity.ServiceUuidItem
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
+import com.sscl.blelibraryforkotlin.ui.dialogs.ChangeConnectedPhyDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.WriteDataDialog
 import com.sscl.blelibraryforkotlin.utils.*
 import com.sscl.blelibraryforkotlin.viewmodels.SingleConnectActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectPhyMask
-import com.sscl.bluetoothlowenergylibrary.enums.connector.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhy
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectPhyMask
+import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhyOptions
 import com.sscl.bluetoothlowenergylibrary.intefaces.*
 import com.sscl.bluetoothlowenergylibrary.utils.BleUtils
 
@@ -128,7 +131,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
          * 设备断开连接
          */
         override fun onDisconnected() {
-            isConnected = false
+            connected = false
             binding.circlePointView.setColor(Color.RED)
             singleConnectActivityViewModel.buttonText.value = getString(R.string.connect_device)
             refreshAdapterData()
@@ -143,6 +146,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
          */
         override fun autoDiscoverServicesFailed() {
             dismissConnecting()
+            connected = false
             binding.circlePointView.setColor(Color.MAGENTA)
             bleConnectorInstance.close()
             toastL(R.string.discover_services_failed)
@@ -159,20 +163,19 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
             toastL(getString(R.string.connect_state_err, statusCode))
+            connected = false
         }
 
         /**
          * 设备服务发现完成
          */
         override fun onServicesDiscovered() {
-            isConnected = true
+            connected = true
             binding.circlePointView.setColor(Color.GREEN)
             singleConnectActivityViewModel.buttonText.value = getString(R.string.disconnect_device)
             dismissConnecting()
             refreshAdapterData()
             toastL(R.string.connected)
-            val succeed = bleConnectorInstance.beginReliableWrite()
-            warnOut("beginReliableWrite $succeed")
         }
 
         /**
@@ -180,6 +183,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
          */
         override fun connectTimeout() {
             dismissConnecting()
+            connected = false
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
             toastL(R.string.connect_timeout)
@@ -192,7 +196,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             dismissConnecting()
             bleConnectorInstance.close()
             binding.circlePointView.setColor(Color.MAGENTA)
-            isConnected = false
+            connected = false
             singleConnectActivityViewModel.buttonText.value = getString(R.string.connect_device)
             toastL(getString(R.string.wrong_gatt_err, gattErrorCode))
         }
@@ -234,6 +238,44 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private val onDescriptorWriteDataListener = OnDescriptorWriteDataListener { descriptor, value ->
         showWriteDataResultDialog(descriptor.uuid.toString(), value)
+    }
+
+    /**
+     * 可靠数据写入完成的回调
+     */
+    private val onReliableWriteCompletedListener = OnReliableWriteCompletedListener {
+        reliableWriteBegin = false
+        toastL(R.string.reliable_data_write_succeed)
+    }
+
+    /**
+     * RSSI读取回调
+     */
+    private val onReadRemoteRssiListener = OnReadRemoteRssiListener {
+        toastL(it.toString())
+    }
+
+    /**
+     * MTU变化回调
+     */
+    private val onMtuChangedListener = OnMtuChangedListener {
+        toastL(getString(R.string.mtu_changed, it))
+    }
+
+    /**
+     * 物理层信息读取回调
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val onPhyReadListener = OnPhyReadListener { txPhy, rxPhy ->
+        showPhyReadResultDialog(txPhy, rxPhy)
+    }
+
+    /**
+     * 物理层信息有变更的回调
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val onPhyUpdateListener = OnPhyUpdateListener { txPhy, rxPhy ->
+        showPhyUpdateDialog(txPhy, rxPhy)
     }
 
     /**
@@ -360,7 +402,12 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     /**
      * 设备是否已连接
      */
-    private var isConnected = false
+    private var connected = false
+
+    /**
+     * 记录当前是否已经开启可靠传输事务
+     */
+    private var reliableWriteBegin: Boolean = false
 
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
@@ -461,6 +508,9 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
             R.id.ble_connect_timeout -> {
                 showSetConnectTimeoutDialog()
             }
+            R.id.ble_additional_options -> {
+                showAdditionalOptionsDialog()
+            }
             else -> {
                 return false
             }
@@ -499,8 +549,18 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
         )
         bleConnectorInstance.setOnDescriptorReadDataListener(onDescriptorReadDataListener)
         bleConnectorInstance.setOnDescriptorWriteDataListener(onDescriptorWriteDataListener)
+        bleConnectorInstance.setOnReliableWriteCompletedListener(onReliableWriteCompletedListener)
+        bleConnectorInstance.setOnReadRemoteRssiListener(onReadRemoteRssiListener)
+        bleConnectorInstance.setOnMtuChangedListener(onMtuChangedListener)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            bleConnectorInstance.setOnPhyReadListener(onPhyReadListener)
+            bleConnectorInstance.setOnPhyUpdateListener(onPhyUpdateListener)
+        }
     }
 
+    /**
+     * 初始化ViewModel数据
+     */
     private fun initViewModelData() {
         singleConnectActivityViewModel.autoReconnect.value = DEFAULT_RECONNECT
         singleConnectActivityViewModel.bleConnectTransportName.value =
@@ -520,7 +580,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     @Synchronized
     private fun doButtonClicked() {
-        if (isConnected) {
+        if (connected) {
             val succeed = bleConnectorInstance.disconnect()
             warnOut("断开设备：succeed $succeed")
         } else {
@@ -565,7 +625,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     private fun refreshAdapterData() {
         servicesCharacteristicsListAdapter.data.clear()
         servicesCharacteristicsListAdapter.notifyDataSetChanged()
-        if (!isConnected) {
+        if (!connected) {
             return
         }
         //获取服务列表
@@ -783,15 +843,18 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private fun showWriteDataResultDialog(
         uuidString: String,
-        value: ByteArray
+        value: ByteArray,
+        fromCharacter: Boolean = true
     ) {
+        if (fromCharacter && reliableWriteBegin) {
+            showReliableWriteDataResultDialog(uuidString, value)
+            return
+        }
         val stringValue = String(value)
         val hexValue = value.toHexStringWithSpace() ?: ""
         AlertDialog.Builder(this)
             .setTitle(R.string.write_data_result_dialog_title)
-            .setMessage(
-                "数据来源：$uuidString\n十六进制：$hexValue\n字符串：$stringValue"
-            )
+            .setMessage("数据来源：$uuidString\n十六进制：$hexValue\n字符串：$stringValue")
             .setPositiveButton(R.string.confirm, null)
             .show()
     }
@@ -838,6 +901,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      * 显示写入数据的对话框
      */
     private fun showWriteCharacteristicDataDialog(serviceUuid: String, characteristicUuid: String) {
+
         WriteDataDialog(this, object : WriteDataDialog.OnConfirmButtonClickedListener {
             /**
              * 字符串数据
@@ -1019,6 +1083,206 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
                 }
             }
             .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 显示更多选项的对话框
+     */
+    private fun showAdditionalOptionsDialog() {
+        if (!connected) {
+            toastL(R.string.additional_options_need_connect_after)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.additional_options_dialog_title)
+            .setItems(R.array.connect_additional_options) { _, which ->
+                when (which) {
+                    //开启可靠数据写入事务
+                    0 -> {
+                        beginReliableWrite()
+                    }
+                    //取消可靠数据写入模式
+                    1 -> {
+                        abortReliableWrite()
+                    }
+                    //读取RSSI
+                    2 -> {
+                        readRssi()
+                    }
+                    //更改MTU(单包数据最大值)
+                    3 -> {
+                        showSetMtuDialog()
+                    }
+                    //读取当前连接的物理层
+                    4 -> {
+                        readPhy()
+                    }
+                    //更改连接物理层
+                    5 -> {
+                        showChangePhyDialog()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 读取当前连接的物理层
+     */
+    private fun readPhy() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            toastL(R.string.read_phy_not_support_with_low_system_version)
+            return
+        }
+        val succeed = bleConnectorInstance.readPhy()
+        if (!succeed) {
+            toastL(R.string.read_phy_failed)
+        }
+    }
+
+    /**
+     * 显示设置MTU的对话框
+     */
+    private fun showSetMtuDialog() {
+        val view = View.inflate(this, R.layout.view_set_mtu, null)
+        val editText = view.findViewById<EditText>(R.id.mtu_et)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.set_mtu)
+            .setView(view)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                val text = editText.text.toString().trim()
+                if (text.isEmpty()) {
+                    return@setPositiveButton
+                }
+                val succeed = bleConnectorInstance.requestMtu(text.toInt())
+                if (!succeed) {
+                    toastL(R.string.request_mtu_failed)
+                }
+            }
+            .setNeutralButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * 读取设备RSSI
+     */
+    private fun readRssi() {
+        val succeed = bleConnectorInstance.readRemoteRssi()
+        if (!succeed) {
+            toastL(R.string.read_rssi_failed)
+        }
+    }
+
+    /**
+     * 开启可靠数据写入事务
+     */
+    private fun beginReliableWrite() {
+        if (reliableWriteBegin) {
+            toastL(R.string.already_in_reliable_write_mode)
+            return
+        }
+        reliableWriteBegin = bleConnectorInstance.beginReliableWrite()
+        if (!reliableWriteBegin) {
+            toastL(R.string.reliable_write_mode_begin_failed)
+        }
+    }
+
+    /**
+     * 可靠数据写入结果回调对话框
+     */
+    private fun showReliableWriteDataResultDialog(uuidString: String, value: ByteArray) {
+        val stringValue = String(value)
+        val hexValue = value.toHexStringWithSpace() ?: ""
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reliable_write_data_result_dialog_title)
+            .setMessage("数据来源：$uuidString\n十六进制：$hexValue\n字符串：$stringValue")
+            .setPositiveButton(R.string.commit) { _, _ ->
+                val succeed = bleConnectorInstance.executeReliableWrite()
+                if (!succeed) {
+                    toastL(R.string.reliable_data_write_failed)
+                    bleConnectorInstance.abortReliableWrite()
+                    reliableWriteBegin = false
+                }
+            }
+            .setNegativeButton(R.string.cancel_write) { _, _ ->
+                abortReliableWrite()
+            }
+            .setNeutralButton(R.string.continue_write, null)
+            .setCancelable(false)
+            .show()
+    }
+
+    /**
+     * 取消可靠数据写入
+     */
+    private fun abortReliableWrite() {
+        if (!reliableWriteBegin) {
+            toastL(R.string.not_in_reliable_write_mode)
+            return
+        }
+        val succeed = bleConnectorInstance.abortReliableWrite()
+        if (!succeed) {
+            toastL(R.string.reliable_data_cancel_write_failed)
+            return
+        }
+        reliableWriteBegin = false
+        toastL(R.string.canceled)
+    }
+
+    /**
+     * 显示读取物理层信息的结果的对话框
+     */
+    private fun showPhyReadResultDialog(txPhy: BlePhy?, rxPhy: BlePhy?) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.read_phy_result_dialog_title)
+            .setMessage(getString(R.string.phy_read_result, txPhy?.name, rxPhy?.name))
+            .setPositiveButton(R.string.confirm, null)
+            .show()
+    }
+
+    /**
+     * 显示物理层信息变更的对话框
+     */
+    private fun showPhyUpdateDialog(txPhy: BlePhy?, rxPhy: BlePhy?) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.phy_update_dialog_title)
+            .setMessage(getString(R.string.phy_read_result, txPhy?.name, rxPhy?.name))
+            .setPositiveButton(R.string.confirm, null)
+            .show()
+    }
+
+    /**
+     * 显示更连接改物理层的对话框
+     */
+    private fun showChangePhyDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            toastL(R.string.change_phy_not_support_with_low_system_version)
+            return
+        }
+        ChangeConnectedPhyDialog(
+            this,
+            object : ChangeConnectedPhyDialog.OnConfirmButtonClickListener {
+                /**
+                 * 确认按钮被点击的回调
+                 */
+                override fun onConfirmButtonClick(
+                    txPhy: BlePhy,
+                    rxPhy: BlePhy,
+                    blePhyOptions: BlePhyOptions
+                ) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        toastL(R.string.change_phy_not_support_with_low_system_version)
+                        return
+                    }
+                    val succeed =
+                        bleConnectorInstance.setPreferredPhy(txPhy, rxPhy, blePhyOptions)
+                    if (!succeed) {
+                        toastL(R.string.change_phy_failed)
+                    }
+                }
+            })
             .show()
     }
 }

@@ -1,4 +1,4 @@
-package com.sscl.bluetoothlowenergylibrary.enums.connector
+package com.sscl.bluetoothlowenergylibrary.enums
 
 import android.bluetooth.BluetoothDevice
 import android.os.Build

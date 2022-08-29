@@ -49,13 +49,13 @@
         <item>@string/no</item>
     </string-array>
 
-    <!--  AD结构的操作选项  -->
+    <!--  广播包-AD结构的操作选项  -->
     <string-array name="ad_struct_options">
         <item>@string/copy_all_ad_struct_data</item>
         <item>@string/copy_ad_data_only</item>
     </string-array>
 
-    <!--  服务数据的操作选项  -->
+    <!--  广播包-服务UUID的操作选项  -->
     <string-array name="service_data_options">
         <item>@string/copy_service_uuid</item>
         <item>@string/copy_service_data</item>
@@ -65,5 +65,22 @@
     <string-array name="descriptor_options">
         <item>@string/read_data</item>
         <item>@string/write_data</item>
+    </string-array>
+
+    <!--  设备连接后-更多选项  -->
+    <string-array name="connect_additional_options">
+        <item>@string/begin_reliable_write</item>
+        <item>@string/abort_reliable_write</item>
+        <item>@string/read_rssi</item>
+        <item>@string/change_mtu</item>
+        <item>@string/read_phy</item>
+        <item>@string/change_phy</item>
+    </string-array>
+
+    <!--  物理层选项  -->
+    <string-array name="phy_options">
+        <item>@string/ble_phy_option_no_preferred</item>
+        <item>@string/ble_phy_option_s2</item>
+        <item>@string/ble_phy_option_s8</item>
     </string-array>
 </resources>

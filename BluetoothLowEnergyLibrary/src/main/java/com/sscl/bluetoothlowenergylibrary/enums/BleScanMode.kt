@@ -1,4 +1,4 @@
-package com.sscl.bluetoothlowenergylibrary.enums.scanner
+package com.sscl.bluetoothlowenergylibrary.enums
 
 import android.bluetooth.le.ScanSettings
 import android.os.Build

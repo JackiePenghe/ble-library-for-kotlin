@@ -12,4 +12,7 @@
     <item
         android:id="@+id/ble_connect_timeout"
         android:title="@string/menu_ble_connect_timeout" />
+    <item
+        android:id="@+id/ble_additional_options"
+        android:title="@string/menu_ble_additional_options" />
 </menu>

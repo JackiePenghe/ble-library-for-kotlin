@@ -17,7 +17,7 @@ import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
 import com.sscl.blelibraryforkotlin.ui.activities.connect.single.SingleConnectActivity
-import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultAdapter
+import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultRecyclerViewAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullMacFilterDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullNameFilterDialog
@@ -28,10 +28,10 @@ import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
 import com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
-import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleCallbackType
-import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleMatchMode
-import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanMode
-import com.sscl.bluetoothlowenergylibrary.enums.scanner.BleScanPhy
+import com.sscl.bluetoothlowenergylibrary.enums.BleCallbackType
+import com.sscl.bluetoothlowenergylibrary.enums.BleMatchMode
+import com.sscl.bluetoothlowenergylibrary.enums.BleScanMode
+import com.sscl.bluetoothlowenergylibrary.enums.BleScanPhy
 import com.sscl.bluetoothlowenergylibrary.getFailMsg
 import com.sscl.bluetoothlowenergylibrary.indexOfScanResults
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBleScanListener
@@ -61,14 +61,14 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
      * 设备列表点击事件
      */
     private val onItemClickListener = OnItemClickListener { _, _, position ->
-        toConnectActivity(scanResultAdapter.data[position])
+        toConnectActivity(scanResultRecyclerViewAdapter.data[position])
     }
 
     /**
      * 设备列表长按事件
      */
     private val onItemLongClickListener = OnItemLongClickListener { adapter, view, position ->
-        showDeviceOptionDialog(scanResultAdapter.data[position])
+        showDeviceOptionDialog(scanResultRecyclerViewAdapter.data[position])
         return@OnItemLongClickListener true
     }
 
@@ -83,7 +83,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
          * @param scanResult  BLE扫描结果.如果为空则表示设备信息有更新
          */
         override fun onScanFindOneNewDevice(scanResult: ScanResult) {
-            scanResultAdapter.addData(scanResult)
+            scanResultRecyclerViewAdapter.addData(scanResult)
         }
 
         /**
@@ -100,9 +100,9 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
          * 扫描结果信息有更新
          */
         override fun onScanResultInfoUpdate(result: ScanResult) {
-            val index = scanResultAdapter.data.indexOfScanResults(result)
+            val index = scanResultRecyclerViewAdapter.data.indexOfScanResults(result)
             if (index >= 0) {
-                scanResultAdapter.setData(index, result)
+                scanResultRecyclerViewAdapter.setData(index, result)
             }
         }
 
@@ -121,11 +121,11 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
         override fun onBatchScanResults(results: List<ScanResult>) {
             //某些特殊的扫描参数会在此方法中回调扫描结果
             for (result in results) {
-                val index = scanResultAdapter.data.indexOfScanResults(result)
+                val index = scanResultRecyclerViewAdapter.data.indexOfScanResults(result)
                 if (index < 0) {
-                    scanResultAdapter.addData(result)
+                    scanResultRecyclerViewAdapter.addData(result)
                 } else {
-                    scanResultAdapter.setData(index, result)
+                    scanResultRecyclerViewAdapter.setData(index, result)
                 }
             }
         }
@@ -152,7 +152,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     /**
      * 扫描结果列表适配器
      */
-    private val scanResultAdapter = ScanResultAdapter()
+    private val scanResultRecyclerViewAdapter = ScanResultRecyclerViewAdapter()
 
     /**
      * 点击事件的监听
@@ -214,8 +214,8 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
      */
     override fun initEvents() {
         binding.searchBtn.setOnClickListener(onClickListener)
-        scanResultAdapter.setOnItemClickListener(onItemClickListener)
-        scanResultAdapter.setOnItemLongClickListener(onItemLongClickListener)
+        scanResultRecyclerViewAdapter.setOnItemClickListener(onItemClickListener)
+        scanResultRecyclerViewAdapter.setOnItemLongClickListener(onItemLongClickListener)
     }
 
     /**
@@ -307,7 +307,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             }
             deviceScanActivityViewModel.searchBtnText.value = getString(R.string.start_scan)
         } else {
-            scanResultAdapter.clear()
+            scanResultRecyclerViewAdapter.clear()
             val succeed = bleScanner.startScan(true)
             if (!succeed) {
                 toastL(R.string.start_scan_failed)
@@ -323,7 +323,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     private fun initScanResultListRvData() {
         binding.deviceListRv.layoutManager = LinearLayoutManager(this)
         binding.deviceListRv.addItemDecoration(DefaultItemDecoration.newLine(Color.GRAY))
-        binding.deviceListRv.adapter = scanResultAdapter
+        binding.deviceListRv.adapter = scanResultRecyclerViewAdapter
     }
 
     /**
