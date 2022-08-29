@@ -5,8 +5,11 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.Logger
+import com.sscl.bluetoothlowenergylibrary.enums.BlePhy
 import com.sscl.bluetoothlowenergylibrary.hasBluetoothConnectPermission
 import com.sscl.bluetoothlowenergylibrary.toHexString
 
@@ -225,7 +228,12 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
      */
     override fun onReliableWriteCompleted(gatt: BluetoothGatt, status: Int) {
         Logger.log(TAG, "onReliableWriteCompleted")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "写入可靠数据失败")
+            performGattStatusErrorListener(status)
+        } else {
+            performReliableWriteCompletedListener()
+        }
     }
 
     /**
@@ -238,7 +246,12 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
      */
     override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
         Logger.log(TAG, "onReadRemoteRssi")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "获取设备RSSI失败")
+            performGattStatusErrorListener(status)
+        } else {
+            performReadRemoteRssiListener(rssi)
+        }
     }
 
     /**
@@ -251,8 +264,12 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
      */
     override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
         Logger.log(TAG, "onMtuChanged")
-        //TODO
-
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "设备MTU变更失败")
+            performGattStatusErrorListener(status)
+        } else {
+            performMtuChangedListener(mtu)
+        }
     }
 
     /**
@@ -266,7 +283,16 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
     override fun onPhyUpdate(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
         super.onPhyUpdate(gatt, txPhy, rxPhy, status)
         Logger.log(TAG, "onPhyUpdate")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "设备MTU变更失败")
+            performGattStatusErrorListener(status)
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                performPhyUpdateListener(txPhy, rxPhy)
+            } else {
+                Logger.log(TAG, "变更物理层信息回调，系统版本过低，未处理")
+            }
+        }
     }
 
     /**
@@ -280,7 +306,16 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
     override fun onPhyRead(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
         super.onPhyRead(gatt, txPhy, rxPhy, status)
         Logger.log(TAG, "onPhyRead")
-        //TODO
+        if (BluetoothGatt.GATT_SUCCESS != status) {
+            Logger.log(TAG, "获取物理层信息失败")
+            performGattStatusErrorListener(status)
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                performPhyReadListener(txPhy, rxPhy)
+            } else {
+                Logger.log(TAG, "获取物理层信息成功，系统版本过低，未处理")
+            }
+        }
     }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -385,6 +420,45 @@ internal class BleBluetoothGattCallback : BluetoothGattCallback() {
             BleManager.bleSingleConnector?.onDescriptorWriteDataListener?.onDescriptorWriteData(
                 descriptor,
                 value
+            )
+        }
+    }
+
+    private fun performReliableWriteCompletedListener() {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onReliableWriteCompletedListener?.onReliableWriteCompleted()
+        }
+    }
+
+    private fun performReadRemoteRssiListener(rssi: Int) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onReadRemoteRssiListener?.onReadRemoteRssi(rssi)
+        }
+    }
+
+    private fun performMtuChangedListener(mtu: Int) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onMtuChangedListener?.onMtuChanged(mtu)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun performPhyReadListener(txPhy: Int, rxPhy: Int) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onPhyReadListener?.onPhyRead(
+                BlePhy.fromValue(
+                    txPhy
+                ), BlePhy.fromValue(rxPhy)
+            )
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun performPhyUpdateListener(txPhy: Int, rxPhy: Int) {
+        BleManager.handler.post {
+            BleManager.bleSingleConnector?.onPhyUpdateListener?.onPhyUpdate(
+                BlePhy.fromValue(
+                    txPhy), BlePhy.fromValue(rxPhy)
             )
         }
     }
