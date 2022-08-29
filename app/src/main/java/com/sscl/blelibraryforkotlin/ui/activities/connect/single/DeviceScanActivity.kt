@@ -1,4 +1,4 @@
-package com.sscl.blelibraryforkotlin.ui.activities.scan
+package com.sscl.blelibraryforkotlin.ui.activities.connect.single
 
 import android.bluetooth.le.ScanResult
 import android.content.Intent
@@ -16,7 +16,7 @@ import com.chad.library.adapter.base.listener.OnItemLongClickListener
 import com.sscl.baselibrary.utils.DefaultItemDecoration
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
-import com.sscl.blelibraryforkotlin.ui.activities.connect.single.SingleConnectActivity
+import com.sscl.blelibraryforkotlin.ui.activities.ScanRecordParseActivity
 import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultRecyclerViewAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.dialogs.SetFullMacFilterDialog
@@ -26,7 +26,7 @@ import com.sscl.blelibraryforkotlin.ui.dialogs.SetStartNameFilterDialog
 import com.sscl.blelibraryforkotlin.utils.IntentConstants
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
-import com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel
+import com.sscl.blelibraryforkotlin.viewmodels.activities.DeviceScanActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.enums.BleCallbackType
 import com.sscl.bluetoothlowenergylibrary.enums.BleMatchMode
@@ -93,7 +93,6 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
          */
         override fun onScanFindOneDevice(scanResult: ScanResult) {
             //do nothing
-//            errorOut("scanRecord ${scanResult.scanRecord?.bytes?.toHexString()}")
         }
 
         /**

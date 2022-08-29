@@ -1,4 +1,4 @@
-package com.sscl.blelibraryforkotlin.viewmodels
+package com.sscl.blelibraryforkotlin.viewmodels.activities
 
 import android.bluetooth.le.ScanResult
 import androidx.lifecycle.MutableLiveData

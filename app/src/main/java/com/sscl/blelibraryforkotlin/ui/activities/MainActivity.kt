@@ -4,10 +4,11 @@ import android.view.View
 import androidx.activity.viewModels
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityMainBinding
-import com.sscl.blelibraryforkotlin.ui.activities.scan.DeviceScanActivity
+import com.sscl.blelibraryforkotlin.ui.activities.connect.multi.MultiDeviceScanActivity
+import com.sscl.blelibraryforkotlin.ui.activities.connect.single.DeviceScanActivity
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.utils.startActivity
-import com.sscl.blelibraryforkotlin.viewmodels.MainActivityViewModel
+import com.sscl.blelibraryforkotlin.viewmodels.activities.MainActivityViewModel
 
 class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
 
@@ -42,6 +43,9 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
         when (it.id) {
             binding.scanAndConnectBtn.id -> {
                 toDeviceScanActivity()
+            }
+            binding.multipleConnectBtn.id ->{
+                toMultiDeviceScanActivity()
             }
         }
     }
@@ -86,6 +90,7 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      */
     override fun initEvents() {
         binding.scanAndConnectBtn.setOnClickListener(onClickListener)
+        binding.multipleConnectBtn.setOnClickListener(onClickListener)
     }
 
     /**
@@ -106,5 +111,12 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      */
     private fun toDeviceScanActivity() {
         startActivity(DeviceScanActivity::class.java)
+    }
+
+    /**
+     * 跳转到多个设备连接时的扫描界面
+     */
+    private fun toMultiDeviceScanActivity() {
+        startActivity(MultiDeviceScanActivity::class.java)
     }
 }

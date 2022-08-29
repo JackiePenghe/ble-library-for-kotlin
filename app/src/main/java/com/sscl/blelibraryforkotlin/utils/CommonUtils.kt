@@ -1,6 +1,7 @@
 package com.sscl.blelibraryforkotlin.utils
 
 import android.app.Activity
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.StringRes
@@ -8,8 +9,8 @@ import androidx.appcompat.app.AlertDialog
 import com.sscl.baselibrary.utils.DebugUtil
 import com.sscl.baselibrary.utils.ToastUtil
 import com.sscl.blelibraryforkotlin.R
+import com.sscl.blelibraryforkotlin.beans.BleScanResultWithBoolean
 import java.util.*
-import kotlin.experimental.and
 
 private var connectingDialog: AlertDialog? = null
 
@@ -73,4 +74,23 @@ fun Int?.toHexString(): String? {
         return "0$hexString"
     }
     return hexString
+}
+
+/**
+ * 获取扫描结果列表中包含的某个扫描结果的索引 -1表示扫描结果列表中不存在该扫描结果
+ */
+fun MutableList<BleScanResultWithBoolean>.indexOfScanResults(bleScanResultWithBoolean: BleScanResultWithBoolean): Int {
+    return this.indexOf(bleScanResultWithBoolean)
+}
+
+/**
+ * 获取扫描结果列表中包含的某个扫描结果的索引 -1表示扫描结果列表中不存在该扫描结果
+ */
+fun MutableList<BleScanResultWithBoolean>.indexOfScanResults(scanResult: ScanResult): Int {
+    for (i in indices) {
+        if (this[i].scanResult.device == scanResult.device) {
+            return i
+        }
+    }
+    return -1
 }

@@ -52,7 +52,6 @@
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="15dp"
             android:gravity="center_vertical"
-            android:text="@{``+item.rssi}"
-            android:textColor="@android:color/black" />
+            android:text="@{``+item.rssi}"/>
     </LinearLayout>
 </layout>

@@ -3,5 +3,5 @@
 
     <style name="AppSplashTheme" parent="SplashTheme" />
 
-    <style name="AppTheme" parent="Theme.BleLibraryForKotlin" />
+    <style name="AppTheme" parent="Theme.BleLibraryForKotlin"/>
 </resources>

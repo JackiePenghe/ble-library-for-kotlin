@@ -74,10 +74,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    implementation fileTree(include: ['*.aar'], dir: 'aars')
+//    implementation fileTree(include: ['*.aar'], dir: 'aars')
 
     //常用基础库
-//    implementation 'com.gitee.sscl:baselibrary-for-kotlin:2.3.17'
+    implementation 'com.gitee.sscl:baselibrary-for-kotlin:2.4.0-rc1'
     /* * * * * * * * * * * * * * * * * * * 基础库扩展开始 * * * * * * * * * * * * * * * * * * */
     //使用AutoSwipeRefreshLayout需要引入SwipeRefreshLayout库
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'

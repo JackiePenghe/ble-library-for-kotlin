@@ -32,7 +32,7 @@ import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.dialogs.ChangeConnectedPhyDialog
 import com.sscl.blelibraryforkotlin.ui.dialogs.WriteDataDialog
 import com.sscl.blelibraryforkotlin.utils.*
-import com.sscl.blelibraryforkotlin.viewmodels.SingleConnectActivityViewModel
+import com.sscl.blelibraryforkotlin.viewmodels.activities.SingleConnectActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.BleManager
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
 import com.sscl.bluetoothlowenergylibrary.enums.BlePhy

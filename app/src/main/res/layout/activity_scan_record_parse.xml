@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.sscl.blelibraryforkotlin.viewmodels.ScanRecordParseActivityViewModel" />
+            type="com.sscl.blelibraryforkotlin.viewmodels.activities.ScanRecordParseActivityViewModel" />
     </data>
 
     <LinearLayout

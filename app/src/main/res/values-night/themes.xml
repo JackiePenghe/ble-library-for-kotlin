@@ -1,10 +1,11 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.BleLibraryForKotlin" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_200</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <!--    指定colorOnPrimary颜色以更改Button的文本颜色    -->
+        <item name="colorOnPrimary">@color/color_on_secondary</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_200</item>
@@ -12,5 +13,27 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <!--  更改溢出菜单按钮的style  -->
+        <item name="actionOverflowButtonStyle">@style/MyOverflowButtonStyle</item>
+        <!--  更改溢出菜单选项的style  -->
+        <item name="android:itemTextAppearance">@style/MyCustomMenuTextAppearance</item>
     </style>
+
+    <!--  溢出菜单图标的style  -->
+    <style name="MyOverflowButtonStyle" parent="Widget.AppCompat.ActionButton.Overflow">
+        <!--  溢出菜单的图标颜色  -->
+        <item name="android:tint">@color/overflow_button_color</item>
+    </style>
+
+    <!--  溢出菜单选项的item的style  -->
+    <style name="MyCustomMenuTextAppearance" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
+        <item name="android:textColor">@color/overflow_text_color</item>
+    </style>
+
+    <!--  溢出菜单的颜色  -->
+    <color name="overflow_button_color" tools:ignore="MissingDefaultResource">#fff3f3f3</color>
+    <!--  溢出菜单的文本的颜色  -->
+    <color name="overflow_text_color" tools:ignore="MissingDefaultResource">#FFF3F3F3</color>
+    <!--  按钮文本的颜色  -->
+    <color name="color_on_secondary" tools:ignore="MissingDefaultResource">#FFF3F3F3</color>
 </resources>

@@ -25,9 +25,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activities.scan.DeviceScanActivity" />
+        <activity android:name=".ui.activities.connect.single.DeviceScanActivity" />
         <activity android:name=".ui.activities.connect.single.SingleConnectActivity" />
-        <activity android:name=".ui.activities.scan.ScanRecordParseActivity" />
+        <activity android:name=".ui.activities.ScanRecordParseActivity" />
+        <activity android:name=".ui.activities.connect.multi.MultiDeviceScanActivity" />
+        <activity android:name=".ui.activities.connect.multi.MultipleDeviceConnectActivity" />
     </application>
 
 </manifest>

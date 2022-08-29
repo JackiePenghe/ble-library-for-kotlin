@@ -1,13 +1,13 @@
-package com.sscl.blelibraryforkotlin.viewmodels
+package com.sscl.blelibraryforkotlin.viewmodels.activities
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
 /**
- * 设备扫描界面ViewModel
+ * 连接多个设备的扫描界面ViewModel
  */
-class DeviceScanActivityViewModel : ViewModel() {
+class MultiDeviceScanActivityViewModel : ViewModel() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -15,11 +15,11 @@ class DeviceScanActivityViewModel : ViewModel() {
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-    object DeviceScanActivityViewModelFactory : ViewModelProvider.Factory {
+    object MultiDeviceScanActivityViewModelFactory : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return DeviceScanActivityViewModel() as T
+            return MultiDeviceScanActivityViewModel() as T
         }
     }
 

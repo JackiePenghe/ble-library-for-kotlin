@@ -228,4 +228,9 @@
     <string name="phy_options_colon">物理层选项：</string>
     <string name="change_phy_failed">更改物理层参数失败</string>
     <string name="phy_update_dialog_title">物理层信息有变更</string>
+    <string name="multiple_connect">多设备连接</string>
+    <string name="multi_device_scan_title">设备扫描-多选</string>
+    <string name="max_select_size_7">最大可选设备数量为7</string>
+    <string name="menu_next">下一步</string>
+    <string name="select_none_device">未选择任何设备</string>
 </resources>

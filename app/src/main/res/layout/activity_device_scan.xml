@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.sscl.blelibraryforkotlin.viewmodels.DeviceScanActivityViewModel" />
+            type="com.sscl.blelibraryforkotlin.viewmodels.activities.DeviceScanActivityViewModel" />
     </data>
 
     <LinearLayout
@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        tools:context=".ui.activities.scan.DeviceScanActivity">
+        tools:context=".ui.activities.connect.single.DeviceScanActivity">
 
         <TextView
             android:layout_width="wrap_content"

@@ -13,7 +13,10 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         //jitpack仓库
-        maven { url 'https://jitpack.io' }
+        maven {
+            url "https://jitpack.io"
+            credentials { username 'jp_liv7jph4n9vqas2k3fkedh9e8o' }
+        }
     }
 }
 rootProject.name = "BleLibraryForKotlin"

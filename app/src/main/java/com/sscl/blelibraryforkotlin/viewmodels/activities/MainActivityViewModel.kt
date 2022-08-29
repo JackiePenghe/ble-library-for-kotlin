@@ -1,6 +1,5 @@
-package com.sscl.blelibraryforkotlin.viewmodels
+package com.sscl.blelibraryforkotlin.viewmodels.activities
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 

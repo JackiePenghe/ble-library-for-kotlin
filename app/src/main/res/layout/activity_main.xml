@@ -5,7 +5,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.sscl.blelibraryforkotlin.viewmodels.MainActivityViewModel" />
+            type="com.sscl.blelibraryforkotlin.viewmodels.activities.MainActivityViewModel" />
     </data>
 
     <LinearLayout
@@ -17,6 +17,12 @@
         <Button
             android:id="@+id/scan_and_connect_btn"
             android:text="@string/scan_and_connect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/multiple_connect_btn"
+            android:text="@string/multiple_connect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </LinearLayout>

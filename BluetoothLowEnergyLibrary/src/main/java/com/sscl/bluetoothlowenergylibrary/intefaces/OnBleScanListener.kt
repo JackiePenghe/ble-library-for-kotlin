@@ -13,7 +13,9 @@ interface OnBleScanListener {
      *
      * @param scanResult BLE扫描结果
      */
-    fun onScanFindOneDevice(scanResult: ScanResult)
+    fun onScanFindOneDevice(scanResult: ScanResult) {
+
+    }
 
     /**
      * 仅当发现一个新的设备时才会回调此方法
@@ -44,5 +46,7 @@ interface OnBleScanListener {
     /**
      * 扫描结果信息有更新
      */
-    fun onScanResultInfoUpdate(result: ScanResult)
+    fun onScanResultInfoUpdate(result: ScanResult) {
+
+    }
 }

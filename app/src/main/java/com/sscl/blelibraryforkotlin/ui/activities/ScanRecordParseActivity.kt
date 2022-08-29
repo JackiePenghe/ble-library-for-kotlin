@@ -1,4 +1,4 @@
-package com.sscl.blelibraryforkotlin.ui.activities.scan
+package com.sscl.blelibraryforkotlin.ui.activities
 
 import android.bluetooth.le.ScanResult
 import android.graphics.Color
@@ -19,7 +19,7 @@ import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.utils.IntentConstants
 import com.sscl.blelibraryforkotlin.utils.toastL
 import com.sscl.blelibraryforkotlin.utils.warnOut
-import com.sscl.blelibraryforkotlin.viewmodels.ScanRecordParseActivityViewModel
+import com.sscl.blelibraryforkotlin.viewmodels.activities.ScanRecordParseActivityViewModel
 import com.sscl.bluetoothlowenergylibrary.AdvertiseStruct
 import com.sscl.bluetoothlowenergylibrary.ServiceDataInfo
 import com.sscl.bluetoothlowenergylibrary.toByteArray
