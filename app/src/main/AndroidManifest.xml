@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.sscl.blelibraryforkotlin">
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:name=".MyApp"
@@ -30,6 +31,7 @@
         <activity android:name=".ui.activities.ScanRecordParseActivity" />
         <activity android:name=".ui.activities.connect.multi.MultiDeviceScanActivity" />
         <activity android:name=".ui.activities.connect.multi.MultipleDeviceConnectActivity" />
+        <activity android:name="com.sscl.blelibraryforkotlin.ui.activities.ScanCodeActivity" />
     </application>
 
 </manifest>

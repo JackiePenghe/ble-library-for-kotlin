@@ -1,5 +1,6 @@
 package com.sscl.blelibraryforkotlin.ui.activities.connect.single
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanResult
 import android.content.Intent
 import android.graphics.Color
@@ -8,14 +9,17 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.chad.library.adapter.base.listener.OnItemLongClickListener
-import com.sscl.baselibrary.utils.DefaultItemDecoration
+import com.sscl.baselibrary.utils.*
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityDeviceScanBinding
+import com.sscl.blelibraryforkotlin.ui.activities.ScanCodeActivity
 import com.sscl.blelibraryforkotlin.ui.activities.ScanRecordParseActivity
 import com.sscl.blelibraryforkotlin.ui.adapters.ScanResultRecyclerViewAdapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
@@ -173,6 +177,11 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
 
     /* * * * * * * * * * * * * * * * * * * 可变属性 * * * * * * * * * * * * * * * * * * */
 
+    /**
+     * startActivityForResult替代（获取扫码结果）
+     */
+    private var scanCodeActivityResultLauncher: ActivityResultLauncher<Intent>? = null
+
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
      * 实现方法
@@ -230,6 +239,42 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+    override fun onStart() {
+        //注册扫码结果启动器
+        scanCodeActivityResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                val resultCode = result.resultCode
+                val intent = result.data
+                if (resultCode == ScanCodeActivity.SCAN_RESULT_CODE) {
+                    if (intent == null) {
+                        return@registerForActivityResult
+                    }
+                    val code = intent.getStringExtra(ScanCodeActivity.SCAN_RESULT)
+                    //扫描结果
+                    DebugUtil.warnOut(TAG, "扫码结果：$code")
+                    toastL("扫码结果：$code")
+                    if (code.isNullOrEmpty()) {
+                        return@registerForActivityResult
+                    }
+                    //不包含冒号的蓝牙MAC地址长度
+                    if (code.length != 12) {
+                        ToastUtil.toastLong(this, "无效的数据$result")
+                        return@registerForActivityResult
+                    }
+                    val macAddressBytes = code.fromHexStringWithoutDelimiterToByteArray()
+                        ?: return@registerForActivityResult
+                    val macAddress = byteArrayToMacAddress(macAddressBytes)?:return@registerForActivityResult
+                    val checkBluetoothAddress = BluetoothAdapter.checkBluetoothAddress(macAddress)
+                    if (!checkBluetoothAddress) {
+                        return@registerForActivityResult
+                    }
+                    toConnectActivity(macAddress)
+                }
+            }
+        super.onStart()
+
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.activity_device_scan, menu)
         return true
@@ -267,6 +312,9 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             }
             R.id.use_legacy -> {
                 showUseLegacyDialog()
+            }
+            R.id.scan_code -> {
+                toScanCodeActivity()
             }
             else -> {
                 return false
@@ -470,8 +518,8 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
             .setTitle(R.string.set_ble_scan_phy_dialog_title)
             .setItems(R.array.ble_scan_phy) { _, which ->
                 val bleScanPhy = BleScanPhy.values()[which]
-                if (bleScanPhy == BleScanPhy.PHY_LE_CODED){
-                    if (!BleManager.isLeCodedPhySupported()){
+                if (bleScanPhy == BleScanPhy.PHY_LE_CODED) {
+                    if (!BleManager.isLeCodedPhySupported()) {
                         toastL(R.string.phy_le_coded_mask_not_support)
                         return@setItems
                     }
@@ -576,6 +624,18 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
         startActivity(intent)
     }
 
+    private fun toConnectActivity(macAddress: String) {
+        if (bleScanner.scanning) {
+            val succeed = bleScanner.stopScan()
+            if (succeed) {
+                deviceScanActivityViewModel.searchBtnText.value = getString(R.string.start_scan)
+            }
+        }
+        val intent = Intent(this, SingleConnectActivity::class.java)
+        intent.putExtra(IntentConstants.BLE_MAC, macAddress)
+        startActivity(intent)
+    }
+
     /**
      * 显示设备操作选项的对话框
      */
@@ -609,6 +669,19 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
         val intent = Intent(this, ScanRecordParseActivity::class.java)
         intent.putExtra(IntentConstants.SCAN_RESULT, scanResult)
         startActivity(intent)
+    }
+
+    /**
+     * 跳转到扫码界面
+     */
+    private fun toScanCodeActivity() {
+        val intent = Intent(this, ScanCodeActivity::class.java)
+        scanCodeActivityResultLauncher?.launch(intent)
+    }
+
+    private fun byteArrayToMacAddress(macAddressBytes: ByteArray?): String? {
+        val toHexStringWithSpace = macAddressBytes.toHexStringWithSpace()
+        return toHexStringWithSpace?.replace(" ", ":")
     }
 
 }

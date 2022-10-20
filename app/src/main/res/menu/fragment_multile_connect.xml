@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/auto_reconnect"
+        android:title="@string/menu_auto_reconnect" />
+    <item
+        android:id="@+id/ble_connect_transport"
+        android:title="@string/menu_ble_connect_transport" />
+    <item
+        android:id="@+id/ble_connect_phy_mask"
+        android:title="@string/menu_ble_connect_phy_mask" />
+    <item
+        android:id="@+id/ble_connect_timeout"
+        android:title="@string/menu_ble_connect_timeout" />
+    <item
+        android:id="@+id/ble_additional_options"
+        android:title="@string/menu_ble_additional_options" />
+</menu>

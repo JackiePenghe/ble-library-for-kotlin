@@ -417,6 +417,11 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
     private var scanResult: ScanResult? = null
 
     /**
+     * 蓝牙MAC地址
+     */
+    private var bleMac: String? = null
+
+    /**
      * 服务UUID缓存
      */
     private var serviceUuid: String? = null
@@ -473,12 +478,13 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      * 在最后进行的操作
      */
     override fun doAfterAll() {
-        if (scanResult == null) {
-            warnOut("测试设备信息，结束当前界面")
+        if (scanResult == null && bleMac == null) {
+            warnOut("没有设备信息，结束当前界面")
             finish()
             return
         }
         singleConnectActivityViewModel.scanResult.value = scanResult
+        singleConnectActivityViewModel.bleMac.value = bleMac
         initBleConnector()
         singleConnectActivityViewModel.buttonText.value = getString(R.string.connect_device)
     }
@@ -534,6 +540,7 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      */
     private fun getIntentData() {
         scanResult = intent.getParcelableExtra(IntentConstants.SCAN_RESULT)
+        bleMac = intent.getStringExtra(IntentConstants.BLE_MAC)
     }
 
     /**
@@ -592,6 +599,44 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      * 连接设备
      */
     private fun connectDevice() {
+        if (scanResult != null) {
+            connectDeviceByScanResult()
+        }else{
+            connectDeviceByMacAddress()
+        }
+    }
+
+    private fun connectDeviceByMacAddress() {
+        val bleMac = bleMac ?: return
+        val succeed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            bleConnectorInstance.connect(
+                bleMac,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT,
+                singleConnectActivityViewModel.bleConnectTransport.value
+                    ?: DEFAULT_BLE_CONNECT_TRANSPORT,
+                singleConnectActivityViewModel.bleConnectPhyMask.value
+                    ?: DEFAULT_BLE_CONNECT_PHY_MASK
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bleConnectorInstance.connect(
+                bleMac,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT,
+                singleConnectActivityViewModel.bleConnectTransport.value
+                    ?: DEFAULT_BLE_CONNECT_TRANSPORT
+            )
+        } else {
+            bleConnectorInstance.connect(
+                bleMac,
+                singleConnectActivityViewModel.autoReconnect.value ?: DEFAULT_RECONNECT
+            )
+        }
+        if (succeed) {
+            showConnecting()
+            binding.circlePointView.setColor(Color.YELLOW)
+        }
+    }
+
+    private fun connectDeviceByScanResult() {
         val scanResult = scanResult ?: return
         val succeed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             bleConnectorInstance.connect(

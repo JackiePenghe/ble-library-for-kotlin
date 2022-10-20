@@ -35,19 +35,22 @@ class SplashActivity : BaseSplashActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.CAMERA
             )
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.CAMERA
             )
         } else {
             arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
             )
         }
 
@@ -190,7 +193,7 @@ class SplashActivity : BaseSplashActivity() {
             .setMessage(
                 getString(
                     R.string.no_permission_dialog_msg,
-                    getString(R.string.sdcard_permission)
+                    getString(R.string.need_permissions)
                 )
             )
             .setCancelable(false)

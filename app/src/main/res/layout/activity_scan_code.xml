@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.sscl.blelibraryforkotlin.viewmodels.activities.ScanCodeActivityViewModel" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.sscl.blelibraryforkotlin.ui.activities.ScanCodeActivity">
+
+        <cn.bingoogolapple.qrcode.zbar.ZBarView
+            android:id="@+id/zbar_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:qrcv_animTime="1000"
+            app:qrcv_barCodeTipText="将条码放入框内，即可自动扫描"
+            app:qrcv_barcodeRectHeight="120dp"
+            app:qrcv_borderColor="@android:color/white"
+            app:qrcv_borderSize="1dp"
+            app:qrcv_cornerColor="@color/teal_700"
+            app:qrcv_cornerLength="20dp"
+            app:qrcv_cornerSize="3dp"
+            app:qrcv_customGridScanLineDrawable="@mipmap/qrcode_default_grid_scan_line"
+            app:qrcv_isAutoZoom="false"
+            app:qrcv_isBarcode="false"
+            app:qrcv_isOnlyDecodeScanBoxArea="false"
+            app:qrcv_isShowDefaultGridScanLineDrawable="true"
+            app:qrcv_isShowDefaultScanLineDrawable="true"
+            app:qrcv_isShowLocationPoint="true"
+            app:qrcv_isShowTipBackground="true"
+            app:qrcv_isShowTipTextAsSingleLine="false"
+            app:qrcv_isTipTextBelowRect="false"
+            app:qrcv_maskColor="#33FFFFFF"
+            app:qrcv_qrCodeTipText="将二维码/条码放入框内，即可自动扫描"
+            app:qrcv_rectWidth="200dp"
+            app:qrcv_scanLineColor="@color/teal_700"
+            app:qrcv_toolbarHeight="56dp"
+            app:qrcv_topOffset="80dp"
+            app:qrcv_verticalBias="-1" />
+        
+        <LinearLayout
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/open_flash_btn"
+                android:text="@string/open_flash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/close_flash_btn"
+                android:text="@string/close_flash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </FrameLayout>
+</layout>

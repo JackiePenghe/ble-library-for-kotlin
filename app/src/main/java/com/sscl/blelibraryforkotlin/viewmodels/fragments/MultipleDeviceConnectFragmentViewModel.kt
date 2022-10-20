@@ -1,13 +1,17 @@
-package com.sscl.blelibraryforkotlin.viewmodels.activities
+package com.sscl.blelibraryforkotlin.viewmodels.fragments
 
 import android.bluetooth.le.ScanResult
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sscl.bluetoothlowenergylibrary.enums.BleConnectPhyMask
 import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
 
-class SingleConnectActivityViewModel : ViewModel() {
+/**
+ * 多设备连接Fragment的ViewModel类
+ */
+class MultipleDeviceConnectFragmentViewModel : ViewModel() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -15,11 +19,11 @@ class SingleConnectActivityViewModel : ViewModel() {
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-    object SingleConnectActivityViewModelFactory : ViewModelProvider.Factory {
+    object MultipleDeviceConnectFragmentViewModelFactory : ViewModelProvider.Factory {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return SingleConnectActivityViewModel() as T
+            return MultipleDeviceConnectFragmentViewModel() as T
         }
     }
 
@@ -33,11 +37,6 @@ class SingleConnectActivityViewModel : ViewModel() {
      * 扫描的设备信息
      */
     val scanResult = MutableLiveData<ScanResult>()
-
-    /**
-     * 蓝牙MAC地址
-     */
-    val bleMac = MutableLiveData<String>()
 
     /**
      * 按钮的文字
@@ -68,5 +67,4 @@ class SingleConnectActivityViewModel : ViewModel() {
      * 连接参数-GATT物理层名称
      */
     val bleConnectPhyMaskName = MutableLiveData<String>()
-
 }

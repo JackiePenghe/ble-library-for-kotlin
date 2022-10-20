@@ -2,7 +2,6 @@ package com.sscl.bluetoothlowenergylibrary
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -11,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import com.sscl.bluetoothlowenergylibrary.connetor.multi.BleMultipleConnector
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBluetoothStateChangedListener
 import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
@@ -114,6 +114,11 @@ object BleManager {
      * 单个设备连接器
      */
     internal var bleSingleConnector: BleSingleConnector? = null
+
+    /**
+     * 多个设备连接器
+     */
+    internal var bleMultipleConnector: BleMultipleConnector? = null
 
     /**
      * 蓝牙单连接服务
@@ -234,6 +239,15 @@ object BleManager {
             bleSingleConnector = BleSingleConnector()
         }
         return bleSingleConnector!!
+    }
+
+    @Synchronized
+    fun getBleMultipleConnectorInstance(): BleMultipleConnector {
+        checkInitialState()
+        if (bleMultipleConnector == null){
+            bleMultipleConnector = BleMultipleConnector()
+        }
+        return bleMultipleConnector!!
     }
 
     /**

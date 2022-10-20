@@ -14,6 +14,8 @@ import java.util.*
 
 private var connectingDialog: AlertDialog? = null
 
+private var loadingDialog: AlertDialog? = null
+
 fun Context.toastL(@StringRes msgRes: Int) {
     ToastUtil.toastLong(this, msgRes)
 }
@@ -93,4 +95,23 @@ fun MutableList<BleScanResultWithBoolean>.indexOfScanResults(scanResult: ScanRes
         }
     }
     return -1
+}
+
+/**
+ * 十六进制字符串转换为标准字符串
+ * 十六进制字符串之间没有任何分割符，如:[616C6B]
+ */
+fun String?.fromHexStringWithoutDelimiterToByteArray(): ByteArray? {
+    this ?: return null
+    var m: Int
+    var n: Int
+    val l: Int = length / 2
+    val ret = ByteArray(l)
+    for (i in 0 until l) {
+        m = i * 2 + 1
+        n = m + 1
+        val integer: Int = Integer.decode("0x" + substring(i * 2, m) + substring(m, n))
+        ret[i] = integer.toByte()
+    }
+    return ret
 }

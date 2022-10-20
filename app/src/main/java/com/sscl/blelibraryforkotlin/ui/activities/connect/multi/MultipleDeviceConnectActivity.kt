@@ -1,13 +1,16 @@
 package com.sscl.blelibraryforkotlin.ui.activities.connect.multi
 
 import android.bluetooth.le.ScanResult
-import com.google.android.material.tabs.TabLayout
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityMultipleDeviceConnectBinding
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.fragments.MultipleDeviceConnectFragment
 import com.sscl.blelibraryforkotlin.utils.IntentConstants
+import com.sscl.bluetoothlowenergylibrary.BleManager
+import com.sscl.bluetoothlowenergylibrary.connetor.multi.BleMultipleConnector
 
 /**
  * 多设备连接的界面
@@ -29,10 +32,25 @@ class MultipleDeviceConnectActivity :
 
     /* * * * * * * * * * * * * * * * * * * 常量属性 * * * * * * * * * * * * * * * * * * */
 
+
+    private var bleMultipleConnector: BleMultipleConnector? = null
+
     /**
      * fragment缓存
      */
     private val fragments = ArrayList<MultipleDeviceConnectFragment>()
+
+    private val fragmentStateAdapter = object : FragmentStateAdapter(this) {
+
+        override fun getItemCount(): Int {
+            return fragments.size
+        }
+
+        override fun createFragment(position: Int): Fragment {
+            return fragments[position]
+        }
+
+    }
 
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
@@ -52,6 +70,7 @@ class MultipleDeviceConnectActivity :
      */
     override fun doBeforeSetLayout() {
         getIntentData()
+        bleMultipleConnector = BleManager.getBleMultipleConnectorInstance()
     }
 
     /**
@@ -66,6 +85,7 @@ class MultipleDeviceConnectActivity :
      */
     override fun initViewData() {
         initTabs()
+        initPagerData()
         TabLayoutMediator(
             binding.tabLayout, binding.viewPager2
         ) { tab, position ->
@@ -119,5 +139,16 @@ class MultipleDeviceConnectActivity :
         for (i in scanResultList.indices) {
             binding.tabLayout.addTab(binding.tabLayout.newTab())
         }
+    }
+
+    /**
+     * 初始化ViewPager2数据
+     */
+    private fun initPagerData() {
+        val scanResultList = scanResultList ?: return
+        for (scanResult in scanResultList) {
+            fragments.add(MultipleDeviceConnectFragment(scanResult, bleMultipleConnector ?: return))
+        }
+        binding.viewPager2.adapter = fragmentStateAdapter
     }
 }
