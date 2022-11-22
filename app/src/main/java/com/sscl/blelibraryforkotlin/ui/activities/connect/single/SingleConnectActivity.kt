@@ -442,6 +442,13 @@ class SingleConnectActivity : BaseDataBindingActivity<ActivitySingleConnectBindi
      * 在设置布局之后，进行其他操作之前，所需要初始化的数据
      */
     override fun doBeforeInitOthers() {
+    }
+
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
         binding.viewModel = singleConnectActivityViewModel
         initViewModelData()
     }

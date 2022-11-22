@@ -1,7 +1,5 @@
 package com.sscl.bluetoothlowenergylibrary.intefaces
 
-import android.bluetooth.BluetoothGattCharacteristic
-
 /**
  * BLE设备连接相关的回调
  *

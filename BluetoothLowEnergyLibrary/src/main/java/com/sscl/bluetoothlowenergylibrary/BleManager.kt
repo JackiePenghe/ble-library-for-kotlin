@@ -1,8 +1,9 @@
+@file:Suppress("unused")
+
 package com.sscl.bluetoothlowenergylibrary
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -11,9 +12,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import com.sscl.bluetoothlowenergylibrary.connetor.multi.BleMultiConnector
 import com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector
 import com.sscl.bluetoothlowenergylibrary.intefaces.OnBluetoothStateChangedListener
 import com.sscl.bluetoothlowenergylibrary.scanner.BleScanner
+import com.sscl.bluetoothlowenergylibrary.services.multiconnect.BluetoothLeMultiConnectService
+import com.sscl.bluetoothlowenergylibrary.services.multiconnect.BluetoothMultiConnectServiceConnection
 import com.sscl.bluetoothlowenergylibrary.services.singleconnect.BluetoothLeSingleConnectService
 import com.sscl.bluetoothlowenergylibrary.services.singleconnect.BluetoothSingleConnectServiceConnection
 import java.util.concurrent.ScheduledThreadPoolExecutor
@@ -59,9 +63,14 @@ object BleManager {
     private val bleScanners = ArrayList<BleScanner>()
 
     /**
-     * 蓝牙单个服务连接器
+     * 蓝牙单个设备连接器服务
      */
     private val bluetoothSingleConnectServiceConnection = BluetoothSingleConnectServiceConnection()
+
+    /**
+     * 蓝牙多个设备连接器服务
+     */
+    private val bluetoothMultiConnectServiceConnection = BluetoothMultiConnectServiceConnection()
 
     /**
      * 蓝牙状态变化的回调监听
@@ -93,6 +102,11 @@ object BleManager {
      */
     private var bindSingleConnectServiceExecute = false
 
+    /**
+     * 记录多个设备连接服务是否已经执行过绑定
+     */
+    private var bindMultiConnectServiceExecute = false
+
     /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -119,6 +133,16 @@ object BleManager {
      * 蓝牙单连接服务
      */
     internal var singleConnectService: BluetoothLeSingleConnectService? = null
+
+    /**
+     * 多个设备连接器
+     */
+    internal var bleMultiConnector: BleMultiConnector? = null
+
+    /**
+     * 蓝牙多连接服务
+     */
+    internal var multiConnectService: BluetoothLeMultiConnectService? = null
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -153,6 +177,7 @@ object BleManager {
         bluetoothAdapter = bluetoothManager?.adapter
         Logger.log(TAG, "bluetoothAdapter = $bluetoothAdapter")
         bindSingleConnectService()
+        bindMultiConnectService()
         initialized = true
     }
 
@@ -222,6 +247,17 @@ object BleManager {
             bleScannerInstance = BleScanner()
         }
         return bleScannerInstance!!
+    }
+
+    /**
+     * 获取多设备蓝牙连接器
+     */
+    fun getBleMultiConnector(): BleMultiConnector {
+        checkInitialState()
+        if (bleMultiConnector == null) {
+            bleMultiConnector = BleMultiConnector()
+        }
+        return bleMultiConnector!!
     }
 
     /**
@@ -324,6 +360,20 @@ object BleManager {
         val succeed = context.bindService(
             intent,
             bluetoothSingleConnectServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+        Logger.log(TAG, "绑定单个蓝牙连接的服务：$succeed")
+    }
+
+    @Synchronized
+    private fun bindMultiConnectService() {
+        if (bindMultiConnectServiceExecute) {
+            return
+        }
+        val intent = Intent(context, BluetoothLeMultiConnectService::class.java)
+        val succeed = context.bindService(
+            intent,
+            bluetoothMultiConnectServiceConnection,
             Context.BIND_AUTO_CREATE
         )
         Logger.log(TAG, "绑定单个蓝牙连接的服务：$succeed")

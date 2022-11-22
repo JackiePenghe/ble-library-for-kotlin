@@ -146,6 +146,13 @@ class MultiDeviceScanActivity : BaseDataBindingActivity<ActivityMultiDeviceScanB
      */
     override fun doBeforeInitOthers() {
         setTitleText(R.string.multi_device_scan_title)
+    }
+
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
         binding.viewModel = multiDeviceScanActivityViewModel
     }
 

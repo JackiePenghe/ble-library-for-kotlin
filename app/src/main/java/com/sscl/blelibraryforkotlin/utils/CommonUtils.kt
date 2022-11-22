@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.sscl.blelibraryforkotlin.utils
 
 import android.app.Activity
@@ -6,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
 import com.sscl.baselibrary.utils.DebugUtil
 import com.sscl.baselibrary.utils.ToastUtil
 import com.sscl.blelibraryforkotlin.R
@@ -18,8 +21,16 @@ fun Context.toastL(@StringRes msgRes: Int) {
     ToastUtil.toastLong(this, msgRes)
 }
 
+fun Fragment.toastL(@StringRes msgRes: Int) {
+    ToastUtil.toastLong(this.context ?: return, msgRes)
+}
+
 fun Context.toastL(msg: String) {
     ToastUtil.toastLong(this, msg)
+}
+
+fun Fragment.toastL(msg: String) {
+    ToastUtil.toastLong(this.context ?: return, msg)
 }
 
 fun <T : Activity> Activity.startActivity(clazz: Class<T>) {
@@ -50,7 +61,24 @@ fun Context.showConnecting() {
         .show()
 }
 
+fun Fragment.showConnecting() {
+    dismissConnecting(false)
+    warnOut("showConnecting")
+    connectingDialog = AlertDialog.Builder(this.context ?: return)
+        .setMessage(R.string.connecting)
+        .setCancelable(false)
+        .show()
+}
+
 fun Context.dismissConnecting(needLog: Boolean = true) {
+    if (needLog) {
+        warnOut("dismissConnecting")
+    }
+    connectingDialog?.dismiss()
+    connectingDialog = null
+}
+
+fun Fragment.dismissConnecting(needLog: Boolean = true) {
     if (needLog) {
         warnOut("dismissConnecting")
     }

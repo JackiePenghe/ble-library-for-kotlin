@@ -68,6 +68,13 @@ class MainActivity : BaseDataBindingActivity<ActivityMainBinding>() {
      */
     override fun doBeforeInitOthers() {
         hideTitleBackButton()
+    }
+
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
         binding.viewModel = mainActivityViewModel
     }
 

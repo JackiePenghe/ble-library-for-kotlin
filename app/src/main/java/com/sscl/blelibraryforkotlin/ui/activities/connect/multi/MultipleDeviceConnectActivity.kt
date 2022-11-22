@@ -1,13 +1,14 @@
 package com.sscl.blelibraryforkotlin.ui.activities.connect.multi
 
 import android.bluetooth.le.ScanResult
-import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sscl.blelibraryforkotlin.R
 import com.sscl.blelibraryforkotlin.databinding.ActivityMultipleDeviceConnectBinding
+import com.sscl.blelibraryforkotlin.ui.adapters.MultipleDeviceConnectFragmentPager2Adapter
 import com.sscl.blelibraryforkotlin.ui.base.BaseDataBindingActivity
 import com.sscl.blelibraryforkotlin.ui.fragments.MultipleDeviceConnectFragment
 import com.sscl.blelibraryforkotlin.utils.IntentConstants
+import com.sscl.bluetoothlowenergylibrary.BleManager
 
 /**
  * 多设备连接的界面
@@ -58,7 +59,13 @@ class MultipleDeviceConnectActivity :
      * 在设置布局之后，进行其他操作之前，所需要初始化的数据
      */
     override fun doBeforeInitOthers() {
+    }
 
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
     }
 
     /**
@@ -66,11 +73,15 @@ class MultipleDeviceConnectActivity :
      */
     override fun initViewData() {
         initTabs()
+        initFragments()
+        binding.viewPager2.adapter =
+            MultipleDeviceConnectFragmentPager2Adapter(this, fragments)
         TabLayoutMediator(
             binding.tabLayout, binding.viewPager2
         ) { tab, position ->
             tab.text = scanResultList?.get(position)?.device?.address
-        }
+        }.attach()
+        binding.viewPager2.offscreenPageLimit = 3
     }
 
     /**
@@ -98,6 +109,18 @@ class MultipleDeviceConnectActivity :
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
+     * 重写方法
+     *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    override fun onDestroy() {
+        super.onDestroy()
+        BleManager.getBleMultiConnector().closeAll()
+        BleManager.getBleMultiConnector().releaseAll()
+    }
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *
      * 私有方法
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -108,7 +131,7 @@ class MultipleDeviceConnectActivity :
     private fun getIntentData() {
         @Suppress("UNCHECKED_CAST")
         scanResultList =
-            intent.getSerializableExtra(IntentConstants.SCAN_RESULT_LIST) as ArrayList<ScanResult>
+            intent.getSerializableExtra(IntentConstants.SCAN_RESULT_LIST) as ArrayList<ScanResult>?
     }
 
     /**
@@ -118,6 +141,17 @@ class MultipleDeviceConnectActivity :
         val scanResultList = scanResultList ?: return
         for (i in scanResultList.indices) {
             binding.tabLayout.addTab(binding.tabLayout.newTab())
+        }
+    }
+
+    /**
+     * 初始化Fragment
+     */
+    private fun initFragments() {
+        val scanResultList = scanResultList ?: return
+
+        for (scanResult in scanResultList) {
+            fragments.add(MultipleDeviceConnectFragment(scanResult))
         }
     }
 }

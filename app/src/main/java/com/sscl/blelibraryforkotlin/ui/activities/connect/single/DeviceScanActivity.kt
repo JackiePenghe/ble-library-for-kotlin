@@ -67,7 +67,7 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
     /**
      * 设备列表长按事件
      */
-    private val onItemLongClickListener = OnItemLongClickListener { adapter, view, position ->
+    private val onItemLongClickListener = OnItemLongClickListener { _, _, position ->
         showDeviceOptionDialog(scanResultRecyclerViewAdapter.data[position])
         return@OnItemLongClickListener true
     }
@@ -191,6 +191,13 @@ class DeviceScanActivity : BaseDataBindingActivity<ActivityDeviceScanBinding>() 
      */
     override fun doBeforeInitOthers() {
         setTitleText(R.string.device_scan_title)
+    }
+
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
         binding.viewModel = deviceScanActivityViewModel
     }
 

@@ -82,7 +82,7 @@ class ScanRecordParseActivity : BaseDataBindingActivity<ActivityScanRecordParseB
     /**
      * 列表选项点击事件
      */
-    private val onItemClickListener = OnItemClickListener { adapter, view, position ->
+    private val onItemClickListener = OnItemClickListener { adapter, _, position ->
         if (adapter == scanRecordParseAdStructRecyclerViewAdapter) {
             showAdStructItemOptionsDialog(scanRecordParseAdStructRecyclerViewAdapter.data[position])
         } else if (adapter == scanRecordServiceDataRecyclerViewAdapter) {
@@ -114,8 +114,15 @@ class ScanRecordParseActivity : BaseDataBindingActivity<ActivityScanRecordParseB
      * 在设置布局之后，进行其他操作之前，所需要初始化的数据
      */
     override fun doBeforeInitOthers() {
-        binding.viewModel = scanRecordParseActivityViewModel
         setTitleText(R.string.view_scan_record)
+    }
+
+    /**
+     * 设置DataBinding
+     * 可在此处设置binding的viewModel或观察者等操作
+     */
+    override fun setBinding() {
+        binding.viewModel = scanRecordParseActivityViewModel
     }
 
     /**

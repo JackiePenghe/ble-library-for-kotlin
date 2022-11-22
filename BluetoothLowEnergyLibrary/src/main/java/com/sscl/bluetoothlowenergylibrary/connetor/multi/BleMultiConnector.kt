@@ -1,9 +1,8 @@
-package com.sscl.bluetoothlowenergylibrary.connetor.single
+@file:Suppress("unused")
 
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothGattService
+package com.sscl.bluetoothlowenergylibrary.connetor.multi
+
+import android.bluetooth.*
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.sscl.bluetoothlowenergylibrary.BleManager
@@ -14,113 +13,10 @@ import com.sscl.bluetoothlowenergylibrary.enums.BleConnectTransport
 import com.sscl.bluetoothlowenergylibrary.enums.BlePhy
 import com.sscl.bluetoothlowenergylibrary.enums.BlePhyOptions
 import com.sscl.bluetoothlowenergylibrary.intefaces.*
+import com.sscl.bluetoothlowenergylibrary.services.multiconnect.BluetoothLeMultiConnectService
 import java.util.*
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
-/**
- * BLE单个设备连接器
- */
-class BleSingleConnector internal constructor() {
-
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *
-     * 静态声明
-     *
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-    companion object {
-        /**
-         * 默认的连接超时
-         */
-        private const val DEFAULT_CONNECT_TIMEOUT = 6000L
-    }
-
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *
-     * 属性声明
-     *
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-    /* * * * * * * * * * * * * * * * * * * 常量属性 * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 连接超时的定时器任务
-     */
-    private val connectTimeoutTimerRunnable = Runnable {
-        BleManager.handler.post {
-            onBleConnectStateChangedListener?.connectTimeout()
-        }
-    }
-
-    /* * * * * * * * * * * * * * * * * * * 可变属性 * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 连接超时时间-默认值 6000毫秒（6秒）
-     */
-    private var connectTimeout = DEFAULT_CONNECT_TIMEOUT
-
-    /* * * * * * * * * * * * * * * * * * * 可空属性 * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 连接超时定时器
-     */
-    private var connectTimeoutTimer: ScheduledExecutorService? = null
-
-    /**
-     * 连接状态回调
-     */
-    internal var onBleConnectStateChangedListener: OnBleConnectStateChangedListener? = null
-
-    /**
-     * 特征读取回调
-     */
-    internal var onCharacteristicReadDataListener: OnCharacteristicReadDataListener? = null
-
-    /**
-     * 特征写入回调
-     */
-    internal var onCharacteristicWriteDataListener: OnCharacteristicWriteDataListener? = null
-
-    /**
-     * 特征通知回调
-     */
-    internal var onCharacteristicNotifyDataListener: OnCharacteristicNotifyDataListener? = null
-
-    /**
-     * 描述读取回调
-     */
-    internal var onDescriptorReadDataListener: OnDescriptorReadDataListener? = null
-
-    /**
-     * 描述写入回调
-     */
-    internal var onDescriptorWriteDataListener: OnDescriptorWriteDataListener? = null
-
-    /**
-     * 可靠数据写入成功回调
-     */
-    internal var onReliableWriteCompletedListener: OnReliableWriteCompletedListener? = null
-
-    /**
-     * 获取设备RSSI回调
-     */
-    internal var onReadRemoteRssiListener: OnReadRemoteRssiListener? = null
-
-    /**
-     * MTU变化回调
-     */
-    internal var onMtuChangedListener: OnMtuChangedListener? = null
-
-    /**
-     * 物理层读取回调
-     */
-    internal var onPhyReadListener: OnPhyReadListener? = null
-
-    /**
-     * 物理层变更的回调
-     */
-    internal var onPhyUpdateListener: OnPhyUpdateListener? = null
+class BleMultiConnector internal constructor() {
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      *
@@ -139,16 +35,6 @@ class BleSingleConnector internal constructor() {
      *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-    /* * * * * * * * * * * * * * * * * * * 内部方法 * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 停止连接超时定时器
-     */
-    internal fun stopConnectTimeoutTimer() {
-        connectTimeoutTimer?.shutdownNow()
-        connectTimeoutTimer = null
-    }
-
     /* * * * * * * * * * * * * * * * * * * 公开方法 * * * * * * * * * * * * * * * * * * */
 
     /**
@@ -164,22 +50,19 @@ class BleSingleConnector internal constructor() {
     @JvmOverloads
     fun connect(
         address: String,
+        onBleConnectStateChangedListener: OnBleConnectStateChangedListener,
         autoReconnect: Boolean = false,
         bleConnectTransport: BleConnectTransport? = null,
         phyMask: BleConnectPhyMask? = null
     ): Boolean {
-        val singleConnectService = BleManager.singleConnectService ?: return false
-        val result =
-            singleConnectService.connect(
-                address,
-                autoReconnect,
-                bleConnectTransport,
-                phyMask
-            )
-        if (result) {
-            startConnectTimeoutTimer()
-        }
-        return result
+        val multiConnectService = BleManager.multiConnectService ?: return false
+        return multiConnectService.connect(
+            address,
+            onBleConnectStateChangedListener,
+            autoReconnect,
+            bleConnectTransport,
+            phyMask
+        )
     }
 
     /**
@@ -195,30 +78,29 @@ class BleSingleConnector internal constructor() {
     @JvmOverloads
     fun connect(
         bluetoothDevice: BluetoothDevice,
+        onBleConnectStateChangedListener: OnBleConnectStateChangedListener,
         autoReconnect: Boolean = false,
         bleConnectTransport: BleConnectTransport? = null,
         phyMask: BleConnectPhyMask? = null
     ): Boolean {
-        val singleConnectService = BleManager.singleConnectService ?: return false
-        val result = singleConnectService.connect(
+        val multiConnectService = BleManager.multiConnectService ?: return false
+        return multiConnectService.connect(
             bluetoothDevice,
+            onBleConnectStateChangedListener,
             autoReconnect,
             bleConnectTransport,
             phyMask
         )
-        if (result) {
-            startConnectTimeoutTimer()
-        }
-        return result
     }
+
 
     /**
      * 断开连接
      * @return 是否执行成功
      */
-    fun disconnect(): Boolean {
-        val singleConnectService = BleManager.singleConnectService ?: return false
-        return singleConnectService.disconnect()
+    fun disconnect(address: String): Boolean {
+        val multiConnectService = BleManager.multiConnectService ?: return false
+        return multiConnectService.disconnect(address)
     }
 
     /**
@@ -227,35 +109,43 @@ class BleSingleConnector internal constructor() {
      * @param connectTimeout  连接超时时间，单位：毫秒
      */
     fun setConnectTimeout(connectTimeout: Long) {
+        val multiConnectService = BleManager.multiConnectService ?: return
         if (connectTimeout > 0) {
-            this.connectTimeout = connectTimeout
+            multiConnectService.connectTimeout = connectTimeout
         } else {
-            this.connectTimeout = DEFAULT_CONNECT_TIMEOUT
+            multiConnectService.connectTimeout =
+                BluetoothLeMultiConnectService.DEFAULT_CONNECT_TIMEOUT
         }
-    }
-
-    /**
-     * 设置蓝牙连接回调
-     * @param onBleConnectStateChangedListener 蓝牙连接回调
-     */
-    fun setOnBleConnectStateChangedListener(onBleConnectStateChangedListener: OnBleConnectStateChangedListener?) {
-        this.onBleConnectStateChangedListener = onBleConnectStateChangedListener
     }
 
     /**
      * 设置特征数据读取回调
      * @param onCharacteristicReadDataListener 特征数据读取回调
      */
-    fun setOnCharacteristicReadDataListener(onCharacteristicReadDataListener: OnCharacteristicReadDataListener?) {
-        this.onCharacteristicReadDataListener = onCharacteristicReadDataListener
+    fun setOnCharacteristicReadDataListener(
+        address: String,
+        onCharacteristicReadDataListener: OnCharacteristicReadDataListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onCharacteristicReadDataListener != null) {
+            multiConnectService.onCharacteristicReadDataListeners[address] =
+                onCharacteristicReadDataListener
+        } else {
+            multiConnectService.onCharacteristicReadDataListeners.remove(address)
+        }
     }
 
     /**
      * 设置MTU变化的回调
      * @param onMtuChangedListener MTU变化的回调
      */
-    fun setOnMtuChangedListener(onMtuChangedListener: OnMtuChangedListener?) {
-        this.onMtuChangedListener = onMtuChangedListener
+    fun setOnMtuChangedListener(address: String, onMtuChangedListener: OnMtuChangedListener?) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onMtuChangedListener != null) {
+            multiConnectService.onMtuChangedListeners[address] = onMtuChangedListener
+        } else {
+            multiConnectService.onMtuChangedListeners.remove(address)
+        }
     }
 
     /**
@@ -263,56 +153,115 @@ class BleSingleConnector internal constructor() {
      * @param onPhyReadListener 物理层读取回调
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setOnPhyReadListener(onPhyReadListener: OnPhyReadListener?) {
-        this.onPhyReadListener = onPhyReadListener
+    fun setOnPhyReadListener(address: String, onPhyReadListener: OnPhyReadListener?) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onPhyReadListener != null) {
+            multiConnectService.onPhyReadListeners[address] = onPhyReadListener
+        } else {
+            multiConnectService.onPhyReadListeners.remove(address)
+        }
     }
 
     /**
      * 设置特征数据读取回调
      * @param onCharacteristicWriteDataListener 特征数据写入回调
      */
-    fun setOnCharacteristicWriteDataListener(onCharacteristicWriteDataListener: OnCharacteristicWriteDataListener?) {
-        this.onCharacteristicWriteDataListener = onCharacteristicWriteDataListener
+    fun setOnCharacteristicWriteDataListener(
+        address: String,
+        onCharacteristicWriteDataListener: OnCharacteristicWriteDataListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onCharacteristicWriteDataListener != null) {
+            multiConnectService.onCharacteristicWriteDataListeners[address] =
+                onCharacteristicWriteDataListener
+        } else {
+            multiConnectService.onCharacteristicWriteDataListeners.remove(address)
+        }
     }
 
     /**
      * 设置特征数据读取回调
      * @param onCharacteristicNotifyDataListener 特征数据通知回调
      */
-    fun setOnCharacteristicNotifyDataListener(onCharacteristicNotifyDataListener: OnCharacteristicNotifyDataListener?) {
-        this.onCharacteristicNotifyDataListener = onCharacteristicNotifyDataListener
+    fun setOnCharacteristicNotifyDataListener(
+        address: String,
+        onCharacteristicNotifyDataListener: OnCharacteristicNotifyDataListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onCharacteristicNotifyDataListener != null) {
+            multiConnectService.onCharacteristicNotifyDataListeners[address] =
+                onCharacteristicNotifyDataListener
+        } else {
+            multiConnectService.onCharacteristicNotifyDataListeners.remove(address)
+        }
     }
 
     /**
      * 设置描述读取回调
      * @param onDescriptorReadDataListener 描述读取回调
      */
-    fun setOnDescriptorReadDataListener(onDescriptorReadDataListener: OnDescriptorReadDataListener?) {
-        this.onDescriptorReadDataListener = onDescriptorReadDataListener
+    fun setOnDescriptorReadDataListener(
+        address: String,
+        onDescriptorReadDataListener: OnDescriptorReadDataListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onDescriptorReadDataListener != null) {
+            multiConnectService.onDescriptorReadDataListeners[address] =
+                onDescriptorReadDataListener
+        } else {
+            multiConnectService.onDescriptorReadDataListeners.remove(address)
+        }
     }
 
     /**
      * 设置描述写入回调
      * @param onDescriptorWriteDataListener 描述写入回调
      */
-    fun setOnDescriptorWriteDataListener(onDescriptorWriteDataListener: OnDescriptorWriteDataListener?) {
-        this.onDescriptorWriteDataListener = onDescriptorWriteDataListener
+    fun setOnDescriptorWriteDataListener(
+        address: String,
+        onDescriptorWriteDataListener: OnDescriptorWriteDataListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onDescriptorWriteDataListener != null) {
+            multiConnectService.onDescriptorWriteDataListeners[address] =
+                onDescriptorWriteDataListener
+        } else {
+            multiConnectService.onDescriptorWriteDataListeners.remove(address)
+        }
     }
 
     /**
      * 设置可靠数据写入回调
      * @param onReliableWriteCompletedListener 可靠数据写入回调
      */
-    fun setOnReliableWriteCompletedListener(onReliableWriteCompletedListener: OnReliableWriteCompletedListener?) {
-        this.onReliableWriteCompletedListener = onReliableWriteCompletedListener
+    fun setOnReliableWriteCompletedListener(
+        address: String,
+        onReliableWriteCompletedListener: OnReliableWriteCompletedListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onReliableWriteCompletedListener != null) {
+            multiConnectService.onReliableWriteCompletedListeners[address] =
+                onReliableWriteCompletedListener
+        } else {
+            multiConnectService.onReliableWriteCompletedListeners.remove(address)
+        }
     }
 
     /**
      * 设置设备RSSI读取回调
      * @param onReadRemoteRssiListener 可靠数据写入回调
      */
-    fun setOnReadRemoteRssiListener(onReadRemoteRssiListener: OnReadRemoteRssiListener?) {
-        this.onReadRemoteRssiListener = onReadRemoteRssiListener
+    fun setOnReadRemoteRssiListener(
+        address: String,
+        onReadRemoteRssiListener: OnReadRemoteRssiListener?
+    ) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onReadRemoteRssiListener != null) {
+            multiConnectService.onReadRemoteRssiListeners[address] =
+                onReadRemoteRssiListener
+        } else {
+            multiConnectService.onReadRemoteRssiListeners.remove(address)
+        }
     }
 
     /**
@@ -320,25 +269,31 @@ class BleSingleConnector internal constructor() {
      * @param onPhyUpdateListener 设备物理层变更的回调
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setOnPhyUpdateListener(onPhyUpdateListener: OnPhyUpdateListener?) {
-        this.onPhyUpdateListener = onPhyUpdateListener
+    fun setOnPhyUpdateListener(address: String, onPhyUpdateListener: OnPhyUpdateListener?) {
+        val multiConnectService = BleManager.multiConnectService ?: return
+        if (onPhyUpdateListener != null) {
+            multiConnectService.onPhyUpdateListeners[address] =
+                onPhyUpdateListener
+        } else {
+            multiConnectService.onPhyUpdateListeners.remove(address)
+        }
     }
 
     /**
      * 发现服务
      * @return 是否执行成功
      */
-    fun discoverServices(): Boolean {
-        return BleManager.singleConnectService?.discoverServices() ?: false
+    fun discoverServices(address: String): Boolean {
+        return BleManager.multiConnectService?.discoverServices(address) ?: false
     }
 
     /**
      * 获取服务列表
      * @return 服务列表
      */
-    fun getServices(): MutableList<BluetoothGattService>? {
-        val singleConnectService = BleManager.singleConnectService ?: return null
-        return singleConnectService.getServices()
+    fun getServices(address: String): MutableList<BluetoothGattService>? {
+        val multiConnectService = BleManager.multiConnectService ?: return null
+        return multiConnectService.getServices(address)
     }
 
     /**
@@ -348,8 +303,8 @@ class BleSingleConnector internal constructor() {
      * @return GATT服务
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun getService(uuid: UUID): BluetoothGattService? {
-        return BleManager.singleConnectService?.getService(uuid)
+    fun getService(address: String, uuid: UUID): BluetoothGattService? {
+        return BleManager.multiConnectService?.getService(address, uuid)
     }
 
     /**
@@ -359,13 +314,14 @@ class BleSingleConnector internal constructor() {
      * @return  是否执行成功
      */
     fun readCharacteristicData(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address, UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
-        return readCharacteristicData(characteristic)
+        return readCharacteristicData(address, characteristic)
     }
 
     /**
@@ -374,16 +330,41 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun readCharacteristicData(characteristic: BluetoothGattCharacteristic): Boolean {
-        return BleManager.singleConnectService?.readCharacteristicData(characteristic) ?: false
+    fun readCharacteristicData(
+        address: String,
+        characteristic: BluetoothGattCharacteristic
+    ): Boolean {
+        return BleManager.multiConnectService?.readCharacteristicData(address, characteristic)
+            ?: false
     }
 
     /**
      * 关闭全部占用的资源
      */
-    fun close() {
-        disconnect()
-        closeGatt()
+    fun close(address: String) {
+        disconnect(address)
+        closeGatt(address)
+    }
+
+    /**
+     * 释放资源
+     */
+    fun release(address: String){
+       BleManager.multiConnectService?.release(address)
+    }
+
+    /**
+     * 关闭全部占用的资源
+     */
+    fun closeAll() {
+        BleManager.multiConnectService?.closeAll()
+    }
+
+    /**
+     * 释放全部资源
+     */
+    fun releaseAll(){
+        BleManager.multiConnectService?.releaseAll()
     }
 
     /**
@@ -392,8 +373,8 @@ class BleSingleConnector internal constructor() {
      * @return  是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun closeGatt(): Boolean {
-        return BleManager.singleConnectService?.closeGatt() ?: false
+    fun closeGatt(address: String): Boolean {
+        return BleManager.multiConnectService?.closeGatt(address) ?: false
     }
 
     /**
@@ -404,14 +385,15 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     fun writeCharacteristicData(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         byteArray: ByteArray
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address, UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
-        return writeCharacteristicData(characteristic, byteArray)
+        return writeCharacteristicData(address, characteristic, byteArray)
     }
 
     /**
@@ -422,10 +404,15 @@ class BleSingleConnector internal constructor() {
      */
     @Suppress("MemberVisibilityCanBePrivate")
     fun writeCharacteristicData(
+        address: String,
         characteristic: BluetoothGattCharacteristic,
         byteArray: ByteArray
     ): Boolean {
-        return BleManager.singleConnectService?.writeCharacteristicData(characteristic, byteArray)
+        return BleManager.multiConnectService?.writeCharacteristicData(
+            address,
+            characteristic,
+            byteArray
+        )
             ?: false
     }
 
@@ -437,14 +424,15 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     fun enableNotification(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         enable: Boolean
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address, UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
-        return enableNotification(characteristic, enable)
+        return enableNotification(address, characteristic, enable)
     }
 
     /**
@@ -455,10 +443,12 @@ class BleSingleConnector internal constructor() {
      */
     @Suppress("MemberVisibilityCanBePrivate")
     fun enableNotification(
+        address: String,
         characteristic: BluetoothGattCharacteristic,
         enable: Boolean
     ): Boolean {
-        return BleManager.singleConnectService?.enableNotification(characteristic, enable) ?: false
+        return BleManager.multiConnectService?.enableNotification(address, characteristic, enable)
+            ?: false
     }
 
     /**
@@ -471,16 +461,16 @@ class BleSingleConnector internal constructor() {
      * 如果未正确写入特征，则调用 [com.sscl.bluetoothlowenergylibrary.connetor.single.BleSingleConnector.abortReliableWrite] 将取消当前事务，而不在远程设备上提交任何值。
      * @return true 可靠的写事务已经启动
      */
-    fun beginReliableWrite(): Boolean {
-        return BleManager.singleConnectService?.beginReliableWrite() ?: false
+    fun beginReliableWrite(address: String): Boolean {
+        return BleManager.multiConnectService?.beginReliableWrite(address) ?: false
     }
 
     /**
      * 取消本次可靠写入模式下写入的数据
      * @return 是否取消成功
      */
-    fun abortReliableWrite(): Boolean {
-        return BleManager.singleConnectService?.abortReliableWrite() ?: false
+    fun abortReliableWrite(address: String): Boolean {
+        return BleManager.multiConnectService?.abortReliableWrite(address) ?: false
     }
 
     /**
@@ -488,8 +478,8 @@ class BleSingleConnector internal constructor() {
      * 将会触发回调-onReliableWriteCompleted
      * @return 是否请求成功
      */
-    fun executeReliableWrite(): Boolean {
-        return BleManager.singleConnectService?.executeReliableWrite() ?: false
+    fun executeReliableWrite(address: String): Boolean {
+        return BleManager.multiConnectService?.executeReliableWrite(address) ?: false
     }
 
     /**
@@ -500,16 +490,17 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     fun readDescriptorData(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         descriptorUuidString: String
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address, UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
         val descriptor =
             characteristic.getDescriptor(UUID.fromString(descriptorUuidString)) ?: return false
-        return readDescriptorData(descriptor)
+        return readDescriptorData(address, descriptor)
     }
 
     /**
@@ -518,8 +509,8 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun readDescriptorData(descriptor: BluetoothGattDescriptor): Boolean {
-        return BleManager.singleConnectService?.readDescriptorData(descriptor) ?: return false
+    fun readDescriptorData(address: String, descriptor: BluetoothGattDescriptor): Boolean {
+        return BleManager.multiConnectService?.readDescriptorData(address,descriptor) ?: return false
     }
 
     /**
@@ -540,14 +531,14 @@ class BleSingleConnector internal constructor() {
      *
      * @return 是否有相应的权限
      */
-    @Suppress("unused")
     fun checkDescriptorPermission(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         descriptorUuidString: String,
         permissions: Int
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address,UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
         val descriptor =
@@ -569,7 +560,7 @@ class BleSingleConnector internal constructor() {
      *  [android.bluetooth.BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM]
      */
     fun checkDescriptorPermission(descriptor: BluetoothGattDescriptor, permissions: Int): Boolean {
-        return BleManager.singleConnectService?.checkDescriptorPermission(descriptor, permissions)
+        return BleManager.multiConnectService?.checkDescriptorPermission(descriptor, permissions)
             ?: false
     }
 
@@ -580,11 +571,12 @@ class BleSingleConnector internal constructor() {
      * @return 是否有对应的属性
      */
     fun checkCharacteristicProperties(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         properties: Int
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address,UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
         return checkCharacteristicProperties(characteristic, properties)
@@ -600,7 +592,7 @@ class BleSingleConnector internal constructor() {
         characteristic: BluetoothGattCharacteristic,
         properties: Int
     ): Boolean {
-        return BleManager.singleConnectService?.checkCharacteristicProperty(
+        return BleManager.multiConnectService?.checkCharacteristicProperty(
             characteristic,
             properties
         ) ?: false
@@ -615,17 +607,18 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     fun writeDescriptorData(
+        address: String,
         serviceUuidString: String,
         characteristicUuidString: String,
         descriptorUuidString: String,
         value: ByteArray
     ): Boolean {
-        val service = getService(UUID.fromString(serviceUuidString)) ?: return false
+        val service = getService(address,UUID.fromString(serviceUuidString)) ?: return false
         val characteristic = service.getCharacteristic(UUID.fromString(characteristicUuidString))
             ?: return false
         val descriptor =
             characteristic.getDescriptor(UUID.fromString(descriptorUuidString)) ?: return false
-        return writeDescriptorData(descriptor, value)
+        return writeDescriptorData(address,descriptor, value)
     }
 
     /**
@@ -634,54 +627,39 @@ class BleSingleConnector internal constructor() {
      * @return 是否执行成功
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun writeDescriptorData(descriptor: BluetoothGattDescriptor, value: ByteArray): Boolean {
-        return BleManager.singleConnectService?.writeDescriptorData(descriptor, value)
+    fun writeDescriptorData(address: String,descriptor: BluetoothGattDescriptor, value: ByteArray): Boolean {
+        return BleManager.multiConnectService?.writeDescriptorData(address,descriptor, value)
             ?: return false
     }
 
     /**
      * 读取设备RSSI
      */
-    fun readRemoteRssi(): Boolean {
-        return BleManager.singleConnectService?.readRemoteRssi() ?: false
+    fun readRemoteRssi(address: String): Boolean {
+        return BleManager.multiConnectService?.readRemoteRssi(address) ?: false
     }
 
     /**
      * 请求MTU
      * @param mtu MTU值
      */
-    fun requestMtu(mtu: Int): Boolean {
-        return BleManager.singleConnectService?.requestMtu(mtu) ?: false
+    fun requestMtu(address: String,mtu: Int): Boolean {
+        return BleManager.multiConnectService?.requestMtu(address,mtu) ?: false
     }
 
     /**
      * 读取物理层
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun readPhy(): Boolean {
-        return BleManager.singleConnectService?.readPhy() ?: false
+    fun readPhy(address: String): Boolean {
+        return BleManager.multiConnectService?.readPhy(address) ?: false
     }
 
     /**
      * 设置物理层偏好
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setPreferredPhy(txPhy: BlePhy, rxPhy: BlePhy, phyOptions: BlePhyOptions): Boolean {
-        return BleManager.singleConnectService?.setPreferredPhy(txPhy, rxPhy, phyOptions) ?: false
-    }
-
-    /* * * * * * * * * * * * * * * * * * * 私有方法 * * * * * * * * * * * * * * * * * * */
-
-    /**
-     * 开启连接超时定时器
-     */
-    private fun startConnectTimeoutTimer() {
-        stopConnectTimeoutTimer()
-        connectTimeoutTimer = BleManager.newScheduledThreadPoolExecutor()
-        connectTimeoutTimer?.schedule(
-            connectTimeoutTimerRunnable,
-            connectTimeout,
-            TimeUnit.MILLISECONDS
-        )
+    fun setPreferredPhy(address: String,txPhy: BlePhy, rxPhy: BlePhy, phyOptions: BlePhyOptions): Boolean {
+        return BleManager.multiConnectService?.setPreferredPhy(address,txPhy, rxPhy, phyOptions) ?: false
     }
 }

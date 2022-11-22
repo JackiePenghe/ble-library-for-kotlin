@@ -84,6 +84,7 @@ class MultipleSelectScanResultRecyclerViewAdapter :
      */
     @SuppressLint("NotifyDataSetChanged")
     fun clear() {
+        checkedPosition.clear()
         data.clear()
         notifyDataSetChanged()
     }
