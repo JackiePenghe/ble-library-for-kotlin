@@ -1,7 +1,23 @@
-
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+}
+apply plugin: 'maven-publish'
+apply plugin: 'kotlin-kapt'
+
+afterEvaluate {
+    publishing {
+        repositories {
+            publications {
+                release(MavenPublication) {
+                    from components.release
+                    groupId 'com.gitee.sscl'
+                    artifactId 'BleLibraryForKotlin'
+                    version '0.0.1'
+                }
+            }
+        }
+    }
 }
 
 android {
