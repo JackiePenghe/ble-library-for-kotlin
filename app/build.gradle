@@ -9,6 +9,7 @@ android {
     defaultConfig {
         applicationId "com.sscl.blelibraryforkotlin"
         minSdk 21
+        //noinspection OldTargetApi
         targetSdk 32
         versionCode 1
         versionName getVersionName()

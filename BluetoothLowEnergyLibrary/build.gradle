@@ -9,6 +9,7 @@ android {
 
     defaultConfig {
         minSdk 21
+        //noinspection OldTargetApi
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
