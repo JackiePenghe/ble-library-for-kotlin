@@ -3,6 +3,8 @@
 #### 介绍
 BLE蓝牙库-Kotlin版本
 
+java版本请移步[https://gitee.com/sscl/BleLibrary](https://gitee.com/sscl/BleLibrary)
+
 #### 软件架构
 软件架构说明
 基于Kotlin封装的android 蓝牙BLE库
