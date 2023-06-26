@@ -5,6 +5,10 @@ BLE蓝牙库-Kotlin版本
 
 java版本请移步[https://gitee.com/sscl/BleLibrary](https://gitee.com/sscl/BleLibrary)
 
+github版本已不在维护，后续的所有维护都已转移到gitee
+
+[传送门{quick link}](https://gitee.com/sscl/ble-library-for-kotlin)
+
 #### 软件架构
 软件架构说明
 基于Kotlin封装的android 蓝牙BLE库
